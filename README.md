@@ -8,7 +8,7 @@ The system is designed to address common challenges in student projects such as 
 
 Group Members:
 
- Hina Tamrakar
- Kajal Kumari Kushwaha
- Rabindra Yadav
- Shahil Shrestha
+Hina Tamrakar
+Kajal Kumari Kushwaha
+Rabindra Yadav
+Shahil Shrestha
