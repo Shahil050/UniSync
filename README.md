@@ -7,8 +7,7 @@ UniSync is a Final Year Project that we are currently developing as a team of fo
 The system is designed to address common challenges in student projects such as team formation, lack of accountability, poor communication, and project abandonment by providing a structured and transparent collaboration environment.
 
 Group Members:
-
-Hina Tamrakar,
-Kajal Kumari Kushwaha,
-Rabindra Yadav,
-Shahil Shrestha
+- Hina Tamrakar
+- Kajal Kumari Kushwaha
+- Rabindra Yadav
+- Shahil Shrestha
