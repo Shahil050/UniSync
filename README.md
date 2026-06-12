@@ -11,3 +11,12 @@ Group Members:
 - Kajal Kumari Kushwaha
 - Rabindra Yadav
 - Shahil Shrestha
+
+# Requirements to run app
+- linux system
+- docker installed
+- docker compose v2 
+
+# steps to run app
+- chmod +x start.sh
+- ./start.sh
