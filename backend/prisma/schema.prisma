@@ -18,7 +18,12 @@ enum UserRole {
   ADMIN
 }
 
-// User
+enum TagType {
+  SKILL
+  INTEREST
+}
+
+// USER
 model User {
   id           String    @id @default(uuid()) @db.Uuid
   fullName     String
@@ -40,5 +45,42 @@ model User {
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
 
+  skills    UserSkill[]
+  embedding UserEmbedding?
+
   @@index([deletedAt])
 }
+
+model Skill {
+  id       String      @id @default(uuid()) @db.Uuid
+  name     String
+  type     TagType
+  category String?
+  users    UserSkill[]
+
+  @@unique([name, type])
+}
+
+model UserSkill {
+  id           String @id @default(uuid()) @db.Uuid
+  userId       String @db.Uuid
+  skillId      String @db.Uuid
+  proficiency  Int?   // for when skill.type == SKILL; left null for INTEREST
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId])
+}
+
+// Pointer into the external vector DB; does not store the embedding itself
+model UserEmbedding {
+  userId       String   @id @db.Uuid
+  vectorId     String
+  modelVersion String
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
