@@ -25,30 +25,92 @@ enum TagType {
 
 // USER
 model User {
-  id           String    @id @default(uuid()) @db.Uuid
-  fullName     String
-  email        String    @unique
-  passwordHash String
+  id            String    @id @default(uuid()) @db.Uuid
+  fullName      String
+  email         String    @unique
+  passwordHash  String
+  emailVerified DateTime?
 
-  university   String?
-  department   String?
-  batch        String?
+  institutionId String?   @db.Uuid
+  department    String?
+  batch         String?
 
-  githubUrl    String?
-  linkedinUrl  String?
-  profileImage String?
+  githubUrl     String?
+  linkedinUrl   String?
+  profileImage  String?
 
-  role         UserRole  @default(STUDENT)
-  bio          String?
+  role          UserRole  @default(STUDENT)
+  bio           String?
 
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  deletedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
 
-  skills    UserSkill[]
-  embedding UserEmbedding?
+  institution        Institution?  @relation(fields: [institutionId], references: [id], onDelete:SetNull)
+  verificationTokens EmailVerificationToken[]
+  accounts           Account[]
+  sessions           Session[]
+  skills             UserSkill[]
+  embedding          UserEmbedding?
 
   @@index([deletedAt])
+}
+
+model Institution {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  domain    String   @unique
+  createdAt DateTime @default(now())
+
+  users User[]
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  token     String   @unique @default(uuid())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// AUTH
+model Account {
+  id                String  @id @default(uuid()) @db.Uuid
+  userId            String  @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  sessionToken String   @unique
+  userId       String   @db.Uuid
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// No id field - NextAuth identifies these by the (identifier, token) pair.
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 model Skill {
