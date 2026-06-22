@@ -3,63 +3,83 @@ services:
   # Frontend service
   frontend:
     build:
-      context: ./Frontend
+      context: ./frontend
       dockerfile: Dockerfile
 
     container_name: unisync_frontend
     ports:
-      -"3000:3000"
+      - "3000:3000" 
     
     environment:
       - REACT_APP_API_url=http://localhost:5000
     restart: unless_stopped
-    depends_on:
-      -backend
+    # depends_on:
+    #   - backend
 
     
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+#   backend:
+#     build:
+#       context: ./backend
+#       dockerfile: Dockerfile
 
-    container_name: unisync_backend
-    ports: "5000:5000"
-    environment:
-      - PORT=5000
-      - DATABASE_URL=postgresql://unisync_user:unisync_password@postgres:5432/unisync_db
-      - AI_SERVICE_URL=http://ai-service:8000
+#     container_name: backend/unisync_backend
+#     ports:
+#       - "8000:8000"
+#     environment:
+#       - PORT=8000
+#       - DATABASE_URL=postgresql://unisync_user:unisync_password@postgres:5432/unisync_db
+#       - AI_SERVICE_URL=http://ai-service:5000
 
-    restart: unless_stopped
-    depends_on:
-      postgres:
-        condition: service_healty
-      ai-service: 
-        condition: service started
-
-
-  ai-service:
-    build:
-      context: ./ai-service
-      dockerfile: Dockerfile
-    container_name: unisync-ai
-    ports:
-      -"8000:8000"
-
-    volumes:
-      - ./ai-service:/app
-      - huggingface_cache:/root/.cache/huggingface_cache
+#     restart: unless_stopped
+#     depends_on:
+#       postgres:
+#         condition: service_healthy
+#       # ai-service: 
+#       #   condition: service_started
 
 
+#   # ai-service:
+#   #   build:
+#   #     context: ./ai_services
+#   #     dockerfile: Dockerfile
+#   #   container_name: unisync-ai
+#   #   ports:
+#   #     - "5000:5000"
 
-  postgres:
-    image: postgres:16-alpine
-    container_name: unisync_postgres
+#   #   volumes:
+#   #     - ./ai_service:/app
+#   #     - huggingface_cache:/root/.cache/huggingface_cache
     
-    ports:
-      - "5432:5432"
+#   #   restart: unless_stopped
 
-    environment:
+
+
+#   postgres:
+#     image: postgres:16-alpine
+#     container_name: unisync_postgres
+    
+#     ports:
+#       - "5432:5432"
+
+#     environment:
+#       - POSTGRES_USER=unisync_user
+#       - POSTGRES_PASSWORD=unisync_password
+#       - POSTGRES_DB=unisync_db
+
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+    
+#     restart: unless_stopped
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U unisync_user -d unisync_db"]
+#       interval: 5s
+#       timeout: 5s
+#       retries: 3
+      
+# volumes:
+#   huggingface_cache:
+#   postgres_data:
       
       
 
