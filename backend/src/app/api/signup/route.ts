@@ -9,14 +9,22 @@ export async function POST(req: NextRequest) {
   // ── Basic validation ──────────────────────────────────────────────
   if (!fullName || !email || !password) {
     return NextResponse.json(
-      { error: "fullName, email and password are required." },
+      { success: false, message: "fullName, email and password are required." },
       { status: 400 }
     );
   }
 
   if (password.length < 8) {
     return NextResponse.json(
-      { error: "Password must be at least 8 characters." },
+      { success: false, message: "Password must be at least 8 characters." },
+      { status: 400 }
+    );
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return NextResponse.json(
+      { success: false, message: "Invalid email format." },
       { status: 400 }
     );
   }
@@ -29,7 +37,7 @@ export async function POST(req: NextRequest) {
 
   if (!institution) {
     return NextResponse.json(
-      { error: "Only Pokhara University affiliated college emails are allowed." },
+      { success: false, message: "Only Pokhara University affiliated college emails are allowed." },
       { status: 403 }
     );
   }
@@ -38,7 +46,7 @@ export async function POST(req: NextRequest) {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     return NextResponse.json(
-      { error: "An account with this email already exists." },
+      { success: false, message: "An account with this email already exists." },
       { status: 409 }
     );
   }
@@ -65,7 +73,7 @@ export async function POST(req: NextRequest) {
   await sendVerificationEmail({ to: email, token: token.token });
 
   return NextResponse.json(
-    { message: "Account created. Please check your email to verify your account." },
+    { success: true, message: "Account created. Please check your email to verify your account." },
     { status: 201 }
   );
 }

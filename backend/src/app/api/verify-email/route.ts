@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
 
   if (!token) {
     return NextResponse.json(
-      { error: "Token is required." },
+      { success: false, message: "Token is required." },
       { status: 400 }
     );
   }
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
   if (!record) {
     return NextResponse.json(
-      { error: "Invalid or already used verification link." },
+      { success: false, message: "Invalid or already used verification link." },
       { status: 400 }
     );
   }
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     // Clean up the expired token so the user can request a fresh one
     await prisma.emailVerificationToken.delete({ where: { token } });
     return NextResponse.json(
-      { error: "Verification link has expired. Please request a new one." },
+      { success: false, message: "Verification link has expired. Please request a new one." },
       { status: 410 }
     );
   }
