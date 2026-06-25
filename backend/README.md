@@ -5,6 +5,7 @@
 - **Framework:** Next.js 16 (App Router)
 - **Auth:** NextAuth.js v5 (JWT cookie-based sessions)
 - **Database:** PostgreSQL via Prisma ORM
+- **Email:** Nodemailer (Mailtrap sandbox for dev)
 
 ---
 
@@ -96,7 +97,7 @@ Verifies the user's email address using the token sent in the verification email
 |-------|------|-------------|
 | `token` | `string` | The verification token from the email link |
 
-**On success:** Redirects to `/auth/login?verified=true`
+**On success:** Redirect
 
 **Error Responses:**
 
@@ -242,6 +243,7 @@ User clicks link → GET /api/verify-email?token=...
 emailVerified timestamp set on user row
       ↓
 Redirect → /auth/login?verified=true
+Redirect
 ```
 
 Users cannot log in until their email is verified. Attempting to log in with an unverified account returns an `EmailNotVerified` error.
