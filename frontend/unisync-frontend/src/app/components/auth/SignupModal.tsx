@@ -30,10 +30,10 @@ export function SignupModal({ open, onClose, onLogin, onSwitchToLogin }: SignupM
       setError("Please enter your email");
       return;
     }
-    if (!form.email.endsWith("@gmail.com") && !form.email.includes("@college")) {
-      setError("Please use Gmail or your college email address.");
-      return;
-    }
+    if (!form.email.endsWith("@gmail.com") && !form.email.endsWith("@eemc.edu.np")) {
+  setError("Please use Gmail or your college (@eemc.edu.np) email address.");
+  return;
+}
     setLoading(true);
     setError("");
     await new Promise((r) => setTimeout(r, 1200));
