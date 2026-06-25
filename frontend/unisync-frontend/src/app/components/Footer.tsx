@@ -1,6 +1,8 @@
-"use client"
+"use client";
+
 import Link from "next/link";
-import { Zap, Github, Linkedin, Mail, MapPin } from "lucide-react";
+import Image from "next/image";
+import { Github, Linkedin, Mail, MapPin } from "lucide-react";
 
 export function Footer() {
   return (
@@ -10,17 +12,29 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
-                <Zap size={20} className="text-white" />
+              <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center overflow-hidden">
+                <Image
+                  src="/handshake-agreement-icon.avif"
+                  alt="UniSync Logo"
+                  width={36}
+                  height={36}
+                  className="object-contain"
+                />
               </div>
+
               <div>
                 <div className="font-black text-lg">UniSync</div>
-                <div className="text-blue-300 text-xs uppercase tracking-widest">Pokhara University</div>
+                <div className="text-blue-300 text-xs uppercase tracking-widest">
+                  Pokhara University
+                </div>
               </div>
             </div>
+
             <p className="text-blue-200 text-sm leading-relaxed max-w-xs">
-              AI-augmented peer collaboration platform for Computer, IT, and Software Engineering students at Pokhara University.
+              AI-augmented peer collaboration platform for Computer, IT, and
+              Software Engineering students at Pokhara University.
             </p>
+
             <div className="flex items-center gap-2 mt-3 text-blue-300 text-sm">
               <MapPin size={14} />
               <span>Pokhara, Gandaki Province, Nepal</span>
@@ -29,7 +43,10 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold text-sm uppercase tracking-wider text-blue-300 mb-4">Platform</h4>
+            <h4 className="font-semibold text-sm uppercase tracking-wider text-blue-300 mb-4">
+              Platform
+            </h4>
+
             <ul className="space-y-2">
               {[
                 { to: "/", label: "Home" },
@@ -39,7 +56,10 @@ export function Footer() {
                 { to: "/messages", label: "Messages" },
               ].map((l) => (
                 <li key={l.to}>
-                  <Link href={l.to} className="text-blue-200 hover:text-white text-sm transition-colors">
+                  <Link
+                    href={l.to}
+                    className="text-blue-200 hover:text-white text-sm transition-colors"
+                  >
                     {l.label}
                   </Link>
                 </li>
@@ -49,22 +69,36 @@ export function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="font-semibold text-sm uppercase tracking-wider text-blue-300 mb-4">Connect</h4>
+            <h4 className="font-semibold text-sm uppercase tracking-wider text-blue-300 mb-4">
+              Connect
+            </h4>
+
             <ul className="space-y-2">
               <li>
-                <a href="mailto:unisync@pu.edu.np" className="flex items-center gap-2 text-blue-200 hover:text-white text-sm transition-colors">
+                <a
+                  href="mailto:unisync@pu.edu.np"
+                  className="flex items-center gap-2 text-blue-200 hover:text-white text-sm transition-colors"
+                >
                   <Mail size={14} />
                   unisync@pu.edu.np
                 </a>
               </li>
+
               <li>
-                <a href="#" className="flex items-center gap-2 text-blue-200 hover:text-white text-sm transition-colors">
+                <a
+                  href="#"
+                  className="flex items-center gap-2 text-blue-200 hover:text-white text-sm transition-colors"
+                >
                   <Github size={14} />
                   GitHub
                 </a>
               </li>
+
               <li>
-                <a href="#" className="flex items-center gap-2 text-blue-200 hover:text-white text-sm transition-colors">
+                <a
+                  href="#"
+                  className="flex items-center gap-2 text-blue-200 hover:text-white text-sm transition-colors"
+                >
                   <Linkedin size={14} />
                   LinkedIn
                 </a>
@@ -75,7 +109,6 @@ export function Footer() {
 
         <div className="border-t border-blue-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-blue-400">
           <p>© 2025 UniSync · Pokhara University · All rights reserved</p>
-         
         </div>
       </div>
     </footer>

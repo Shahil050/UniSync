@@ -36,24 +36,24 @@ const CHATS: Chat[] = [
     unread: 3,
     messages: [
       { id: 1, sender: "System", avatar: "", text: "Group created after agreement acceptance.", time: "9:00 AM", isMine: false, type: "system" },
-      { id: 2, sender: "Priya T.", avatar: "https://i.pravatar.cc/32?img=5", text: "Hey everyone! Let's kick things off 🚀", time: "9:05 AM", isMine: false },
+      { id: 2, sender: "Priya T.", avatar: "/kajal.jpg", text: "Hey everyone! Let's kick things off 🚀", time: "9:05 AM", isMine: false },
       { id: 3, sender: "Me", avatar: "", text: "Excited to work with you all!", time: "9:06 AM", isMine: true },
-      { id: 4, sender: "Bikash G.", avatar: "https://i.pravatar.cc/32?img=11", text: "I've set up the GitHub repo. Sharing the link now.", time: "9:10 AM", isMine: false },
-      { id: 5, sender: "Priya T.", avatar: "https://i.pravatar.cc/32?img=5", text: "I've pushed the model weights", time: "2m ago", isMine: false },
+      { id: 4, sender: "Bikash G.", avatar: "/PUT_BIKASH_PHOTO_HERE.jpg", text: "I've set up the GitHub repo. Sharing the link now.", time: "9:10 AM", isMine: false },
+      { id: 5, sender: "Priya T.", avatar: "/PUT_PRIYA_PHOTO_HERE.jpg", text: "I've pushed the model weights", time: "2m ago", isMine: false },
     ],
   },
   {
     id: 2,
     name: "Priya Thapa",
-    avatar: "https://i.pravatar.cc/40?img=5",
+    avatar: "/kajal.jpg",
     isGroup: false,
     lastMsg: "Sure, let's meet tomorrow at 10",
     time: "1h",
     unread: 0,
     messages: [
-      { id: 1, sender: "Priya T.", avatar: "https://i.pravatar.cc/32?img=5", text: "Hi! Are you free to discuss the project?", time: "Yesterday", isMine: false },
+      { id: 1, sender: "Priya T.", avatar: "/PUT_PRIYA_PHOTO_HERE.jpg", text: "Hi! Are you free to discuss the project?", time: "Yesterday", isMine: false },
       { id: 2, sender: "Me", avatar: "", text: "Yes, what time works for you?", time: "Yesterday", isMine: true },
-      { id: 3, sender: "Priya T.", avatar: "https://i.pravatar.cc/32?img=5", text: "Sure, let's meet tomorrow at 10", time: "1h ago", isMine: false },
+      { id: 3, sender: "Priya T.", avatar: "/PUT_PRIYA_PHOTO_HERE.jpg", text: "Sure, let's meet tomorrow at 10", time: "1h ago", isMine: false },
     ],
   },
   {
@@ -65,7 +65,7 @@ const CHATS: Chat[] = [
     time: "3h",
     unread: 1,
     messages: [
-      { id: 1, sender: "Sita R.", avatar: "https://i.pravatar.cc/32?img=12", text: "Meeting postponed to 3 PM", time: "3h ago", isMine: false },
+      { id: 1, sender: "Sita R.", avatar: "/PUT_SITA_PHOTO_HERE.jpg", text: "Meeting postponed to 3 PM", time: "3h ago", isMine: false },
     ],
   },
 ];
@@ -150,11 +150,11 @@ export function MessagesModule({ user }: { user: AppUser }) {
               }`}
             >
               {chat.isGroup ? (
-                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <Users size={18} className="text-blue-600" />
                 </div>
               ) : (
-                <img src={chat.avatar} alt={chat.name} className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
+                <img src={chat.avatar} alt={chat.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
@@ -178,11 +178,11 @@ export function MessagesModule({ user }: { user: AppUser }) {
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-blue-50">
           {activeChat.isGroup ? (
-            <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center">
+            <div className="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center">
               <Users size={16} className="text-blue-600" />
             </div>
           ) : (
-            <img src={activeChat.avatar} alt={activeChat.name} className="w-9 h-9 rounded-xl object-cover" />
+            <img src={activeChat.avatar} alt={activeChat.name} className="w-9 h-9 rounded-full object-cover" />
           )}
           <div>
             <p className="font-bold text-slate-800 text-sm">{activeChat.name}</p>

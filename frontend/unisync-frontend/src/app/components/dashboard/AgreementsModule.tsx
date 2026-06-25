@@ -21,12 +21,22 @@ const AGREEMENTS: Agreement[] = [
     status: "Active",
     role: "Project Lead",
     peers: [
-      { name: "Priya T.", avatar: "https://i.pravatar.cc/32?img=5", accepted: true },
-      { name: "Bikash G.", avatar: "https://i.pravatar.cc/32?img=11", accepted: true },
+      {
+        name: "Sapna Kushwaha.",
+        avatar: "/sapna.jpg",
+        accepted: true,
+      },
+      {
+        name: "Bikash G.",
+        avatar: "/bikash.jpg",
+        accepted: true,
+      },
     ],
     deadline: "Jun 30, 2025",
-    description: "Develop a CNN model to identify crop diseases from photos. All members contribute equally to training and evaluation.",
-    penalties: "Missing 3+ meetings results in removal and Abandonment Tag.",
+    description:
+      "Develop a CNN model to identify crop diseases from photos. All members contribute equally to training and evaluation.",
+    penalties:
+      "Missing 3+ meetings results in removal and Abandonment Tag.",
   },
   {
     id: 2,
@@ -34,12 +44,22 @@ const AGREEMENTS: Agreement[] = [
     status: "Pending",
     role: "Contributor",
     peers: [
-      { name: "Sita R.", avatar: "https://i.pravatar.cc/32?img=12", accepted: true },
-      { name: "Roshan K.", avatar: "https://i.pravatar.cc/32?img=8", accepted: false },
+      {
+        name: "Hina Tamarakar.",
+        avatar: "/hina.jpg",
+        accepted: true,
+      },
+      {
+        name: "Rabindra yadav.",
+        avatar: "/rabindra.jpg",
+        accepted: false,
+      },
     ],
     deadline: "Jul 15, 2025",
-    description: "Build a real-time notification system for campus events using React and WebSockets.",
-    penalties: "Incomplete tasks by deadline result in reduced reputation score.",
+    description:
+      "Build a real-time notification system for campus events using React and WebSockets.",
+    penalties:
+      "Incomplete tasks by deadline result in reduced reputation score.",
   },
 ];
 

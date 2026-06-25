@@ -15,39 +15,49 @@ type Notification = {
 
 const NOTIFICATIONS: Notification[] = [
   {
-    id: 1, type: "request",
+    id: 1,
+    type: "request",
     title: "Collaboration Request",
     description: "Priya Thapa wants to collaborate on your 'AI Chatbot' idea.",
-    avatar: "https://i.pravatar.cc/40?img=5",
-    time: "5m ago", isRead: false,
+    avatar: "/kajal.jpg",
+    time: "5m ago",
+    isRead: false,
   },
   {
-    id: 2, type: "agreement",
+    id: 2,
+    type: "agreement",
     title: "Agreement Update",
     description: "Roshan Karki accepted the Campus Event Aggregator agreement.",
-    avatar: "https://i.pravatar.cc/40?img=8",
-    time: "1h ago", isRead: false,
+    avatar: "/shahil.jpg",
+    time: "1h ago",
+    isRead: false,
   },
   {
-    id: 3, type: "match",
+    id: 3,
+    type: "match",
     title: "New Peer Match",
     description: "You matched with Anisha Basnet — 4 shared interests in Data Science!",
-    avatar: "https://i.pravatar.cc/40?img=16",
-    time: "3h ago", isRead: true,
+    avatar: "/kajalimage2.jpg",
+    time: "3h ago",
+    isRead: true,
   },
   {
-    id: 4, type: "message",
+    id: 4,
+    type: "message",
     title: "New Message",
     description: "Bikash Gurung sent a message in AI Project Group.",
-    avatar: "https://i.pravatar.cc/40?img=11",
-    time: "5h ago", isRead: true,
+    avatar: "/user1image.jpg",
+    time: "5h ago",
+    isRead: true,
   },
   {
-    id: 5, type: "badge",
+    id: 5,
+    type: "badge",
     title: "Badge Unlocked!",
     description: "You earned the 'Team Player' badge for completing your first group project!",
     avatar: "",
-    time: "1d ago", isRead: true,
+    time: "1d ago",
+    isRead: true,
   },
 ];
 
@@ -110,7 +120,7 @@ export function NotificationsPanel() {
                 {/* Avatar / type icon */}
                 <div className="relative flex-shrink-0">
                   {n.avatar ? (
-                    <img src={n.avatar} alt="" className="w-10 h-10 rounded-xl object-cover" />
+                    <img src={n.avatar} alt="" className="w-10 h-10 rounded-full object-cover border border-blue-100" />
                   ) : (
                     <div className={`w-10 h-10 ${config.bg} rounded-xl flex items-center justify-center ${config.color}`}>
                       {config.icon}

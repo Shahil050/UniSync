@@ -1,78 +1,76 @@
 import { useRef } from "react";
 import { motion } from "motion/react";
 import { useInView } from "motion/react";
-import {
-  Users, Lightbulb, FileSignature, MessageSquare, BarChart2, Award,
-  Linkedin, Search, Bell, Gamepad2, Shield, Download, Star, Zap
-} from "lucide-react";
+import Image from "next/image";
+import { Shield, Download, Zap } from "lucide-react";
 import { Footer } from "../components/Footer";
 
 const FEATURES_DETAILED = [
   {
-    icon: <Users size={28} />,
+    icon: "/people-icon.png",
     title: "Peer Discovery",
     desc: "Our AI-powered recommendation engine matches you with peers who share your interests and academic goals. Similar to Facebook's mutual friends, see shared interests instantly.",
     points: ["AI-powered matching", "Interest-based recommendations", "Mutual connection display", "Faculty filtering"],
     color: "blue",
   },
   {
-    icon: <Lightbulb size={28} />,
+    icon: "/idea-icons.jpg",
     title: "Posted Ideas Feed",
     desc: "A scrollable feed of project and research ideas posted by students. Like, comment, and request to join ideas that inspire you.",
     points: ["Real-time feed updates", "Like and comment on ideas", "One-click join requests", "Tag-based browsing"],
     color: "cyan",
   },
   {
-    icon: <FileSignature size={28} />,
+    icon: "/handshake-agreement-icon.avif",
     title: "Agreements & Contracts",
     desc: "Digital collaboration contracts define roles, responsibilities, deadlines, and penalties. Full accept/reject workflow with project status tracking.",
     points: ["Role assignment (Lead, Contributor, Reviewer)", "Deadline & penalty tracking", "Accept/Reject workflow", "Status: Pending → Active → Completed"],
     color: "blue",
   },
   {
-    icon: <MessageSquare size={28} />,
+    icon: "/message-icon.png",
     title: "Messaging & Groups",
     desc: "Real-time chat for groups and private conversations. When an agreement is accepted, a project group is created automatically with file and media sharing.",
     points: ["Auto-created project groups", "Photo & video sharing", "Copy/paste/select in chat", "File and media gallery"],
     color: "sky",
   },
   {
-    icon: <BarChart2 size={28} />,
+    icon: "/acticityicon.png",
     title: "Activity Logs",
     desc: "A visual timeline of every contribution, badge, project completion, and peer validation. Full transparency of your academic collaboration journey.",
     points: ["Timeline visualization", "Contribution tracking", "Abandonment tags", "Peer validation records"],
     color: "blue",
   },
   {
-    icon: <Award size={28} />,
+    icon: "/badgesicon.png",
     title: "Badges & Credentials",
     desc: "Earn verified digital badges for completing projects and contributing to the community. Export credentials for your portfolio and LinkedIn.",
     points: ["Project completion badges", "Verified credentials", "Portfolio export (PDF)", "Reputation score display"],
     color: "cyan",
   },
   {
-    icon: <Linkedin size={28} />,
+    icon: "/linkedin-logo.webp",
     title: "LinkedIn & GitHub Integration",
     desc: "Add your LinkedIn and GitHub profiles to build professional credibility. Profiles display verified links for peer trust.",
     points: ["Clickable profile links", "Trust verification", "Public profile display", "Social proof"],
     color: "blue",
   },
   {
-    icon: <Search size={28} />,
+    icon: "/search.png",
     title: "Search & Filters",
     desc: "Global search bar with autocomplete across peers, projects, and interests. Advanced filters by faculty, skill, and category.",
     points: ["Autocomplete suggestions", "Peer and project search", "Faculty & skill filters", "Card-format results"],
     color: "sky",
   },
   {
-    icon: <Bell size={28} />,
+    icon: "/notification.png",
     title: "Notifications",
     desc: "Real-time alerts for collaboration requests, agreement updates, peer matches, and group activity. Never miss an important update.",
     points: ["Collaboration request alerts", "Agreement status updates", "Peer match notifications", "Group activity alerts"],
     color: "blue",
   },
   {
-    icon: <Gamepad2 size={28} />,
+    icon: "/game.png",
     title: "Gamification",
     desc: "Leaderboards, streak counters, and contribution badges keep you motivated. Compete with peers while contributing meaningfully.",
     points: ["Weekly leaderboard", "Contribution streaks", "Achievement badges", "Reputation points"],
@@ -109,6 +107,7 @@ const borderMap = {
 function FeatureDetailCard({ feat, index }: { feat: typeof FEATURES_DETAILED[0]; index: number }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
+  const isImage = typeof feat.icon === "string";
 
   return (
     <motion.div
@@ -118,8 +117,12 @@ function FeatureDetailCard({ feat, index }: { feat: typeof FEATURES_DETAILED[0];
       transition={{ duration: 0.6, delay: (index % 3) * 0.1 }}
       className={`bg-white rounded-2xl border p-6 shadow-sm hover:shadow-md transition-all ${borderMap[feat.color]}`}
     >
-      <div className={`w-12 h-12 rounded-2xl ${colorMap[feat.color]} text-white flex items-center justify-center mb-5 shadow-md`}>
-        {feat.icon}
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-5 shadow-md overflow-hidden ${isImage ? "bg-white p-2" : `${colorMap[feat.color]} text-white`}`}>
+        {isImage ? (
+          <Image src={feat.icon as string} alt={feat.title} width={28} height={28} className="w-full h-full object-contain" />
+        ) : (
+          feat.icon
+        )}
       </div>
       <h3 className="font-black text-slate-800 text-lg mb-3">{feat.title}</h3>
       <p className="text-slate-500 text-sm leading-relaxed mb-5">{feat.desc}</p>

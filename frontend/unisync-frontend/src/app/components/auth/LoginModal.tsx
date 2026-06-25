@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Mail, Lock, Eye, EyeOff, Zap, ArrowRight } from "lucide-react";
+import Image from "next/image";
+import { X, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 type LoginModalProps = {
@@ -128,14 +129,14 @@ export function LoginModal({ open, onClose, onLogin, onSwitchToSignup }: LoginMo
                 <X size={16} />
               </button>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Zap size={20} />
-                </div>
-                <div>
-                  <div className="font-black text-lg">UniSync</div>
-                  <div className="text-blue-300 text-xs">Secure Authentication</div>
-                </div>
-              </div>
+  <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/20">
+    <Image src="/handshake-agreement-icon.avif" alt="UniSync logo" width={40} height={40} className="w-full h-full object-cover" />
+  </div>
+  <div>
+    <div className="font-black text-lg">UniSync</div>
+    <div className="text-blue-300 text-xs">Secure Authentication</div>
+  </div>
+</div>
               <h2 className="text-2xl font-black mb-1">Welcome Back</h2>
               <p className="text-blue-200 text-sm">
                 {step === "login" ? "Sign in with Gmail or college email" : "Verify your email address"}

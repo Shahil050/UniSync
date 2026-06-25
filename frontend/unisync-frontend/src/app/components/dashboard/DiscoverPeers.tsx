@@ -7,8 +7,8 @@ import { Filter } from "lucide-react";
 const PEERS: Peer[] = [
   {
     id: 1,
-    name: "Priya Thapa",
-    avatar: "https://i.pravatar.cc/80?img=5",
+    name: "Kajal kUshwaha",
+    avatar: "/kajal.jpg",
     faculty: "Computer Engineering",
     interests: ["Machine Learning", "Computer Vision", "Python"],
     reputation: 4.9,
@@ -19,8 +19,8 @@ const PEERS: Peer[] = [
   },
   {
     id: 2,
-    name: "Roshan Karki",
-    avatar: "https://i.pravatar.cc/80?img=8",
+    name: "shahil shrestha",
+    avatar: "/shahil.jpg",
     faculty: "Information Technology",
     interests: ["Blockchain", "Web3", "Backend Dev"],
     reputation: 4.7,
@@ -30,8 +30,8 @@ const PEERS: Peer[] = [
   },
   {
     id: 3,
-    name: "Sita Rana",
-    avatar: "https://i.pravatar.cc/80?img=12",
+    name: "Sapana kushwaha",
+    avatar: "/sapna.jpg",
     faculty: "Software Engineering",
     interests: ["Web Development", "React", "UI/UX"],
     reputation: 4.6,
@@ -41,8 +41,8 @@ const PEERS: Peer[] = [
   },
   {
     id: 4,
-    name: "Bikash Gurung",
-    avatar: "https://i.pravatar.cc/80?img=11",
+    name: "Bikash Mehta",
+    avatar: "/bikash.jpg",
     faculty: "Computer Engineering",
     interests: ["Cybersecurity", "Networking", "Linux"],
     reputation: 4.8,
@@ -53,8 +53,8 @@ const PEERS: Peer[] = [
   },
   {
     id: 5,
-    name: "Anisha Basnet",
-    avatar: "https://i.pravatar.cc/80?img=16",
+    name: "Ashish Singh",
+    avatar: "/ASHISH MEHTA.jpg",
     faculty: "Information Technology",
     interests: ["Data Science", "Visualization", "Statistics"],
     reputation: 4.5,
@@ -64,8 +64,8 @@ const PEERS: Peer[] = [
   },
   {
     id: 6,
-    name: "Dipesh Magar",
-    avatar: "https://i.pravatar.cc/80?img=15",
+    name: "Sushant Joshi",
+    avatar: "/sushant.jpg",
     faculty: "Software Engineering",
     interests: ["Mobile Dev", "Flutter", "Firebase"],
     reputation: 4.4,
@@ -74,7 +74,6 @@ const PEERS: Peer[] = [
     isConnected: false,
   },
 ];
-
 const FILTERS = ["All", "Computer Engineering", "Information Technology", "Software Engineering"];
 
 export function DiscoverPeers() {
