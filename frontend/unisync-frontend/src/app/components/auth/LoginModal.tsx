@@ -24,9 +24,8 @@ export function LoginModal({ open, onClose, onLogin, onSwitchToSignup }: LoginMo
   const router = useRouter();
 
   const isValidEmail = (emailValue: string) => {
-    return emailValue.endsWith("@gmail.com") || emailValue.includes("@college");
-  };
-
+  return emailValue.endsWith("@gmail.com") || emailValue.endsWith("@eemc.edu.np");
+};
   const generateVerificationCode = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
   };
