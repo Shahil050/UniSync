@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { motion } from "motion/react";
-import Image from "next/image";
 import { Github, Linkedin, Star, Award, Edit3, Camera, ExternalLink, CheckCircle2, Download } from "lucide-react";
 import type { AppUser } from "../../App";
 
@@ -53,13 +52,11 @@ export function ProfileSection({ user }: { user: AppUser }) {
         <div className="px-6 pb-6 -mt-12">
           <div className="flex items-end justify-between mb-4">
             <div className="relative">
-              <Image
-  src="/shahil.jpg"
-  alt={user.name}
-  width={80}
-  height={80}
-  className="w-20 h-20 rounded-full border-4 border-white object-cover shadow-lg"
-/>
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-20 h-20 rounded-2xl border-4 border-white object-cover shadow-lg"
+              />
               <button className="absolute -bottom-1 -right-1 w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors border-2 border-white">
                 <Camera size={12} />
               </button>

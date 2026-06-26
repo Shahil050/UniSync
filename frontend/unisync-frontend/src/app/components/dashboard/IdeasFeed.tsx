@@ -22,7 +22,7 @@ const MOCK_IDEAS: Idea[] = [
   {
     id: 1,
     author: "Priya Thapa",
-    avatar: "/kajal.jpg",
+    avatar: "https://i.pravatar.cc/40?img=5",
     faculty: "Computer Engineering",
     title: "AI-Powered Crop Disease Detection System",
     description: "Building a CNN-based mobile app to detect crop diseases from photos. Looking for 2 collaborators with ML and mobile dev experience.",
@@ -36,7 +36,7 @@ const MOCK_IDEAS: Idea[] = [
   {
     id: 2,
     author: "Roshan Karki",
-    avatar: "/shahil.jpg",
+    avatar: "https://i.pravatar.cc/40?img=8",
     faculty: "IT",
     title: "Decentralized Academic Credential Verification",
     description: "Using blockchain to create tamper-proof academic records for Pokhara University students. Need 1 backend developer.",
@@ -50,7 +50,7 @@ const MOCK_IDEAS: Idea[] = [
   {
     id: 3,
     author: "Sita Rana",
-    avatar: "/kajalimage2.jpg",
+    avatar: "https://i.pravatar.cc/40?img=12",
     faculty: "Software Engineering",
     title: "Real-Time Campus Event Aggregator",
     description: "A platform to aggregate and notify students about campus events, deadlines, and announcements in real time.",

@@ -6,109 +6,15 @@ import { Footer } from "../components/Footer";
 import { Compass, Filter, SlidersHorizontal } from "lucide-react";
 
 const ALL_PEERS: Peer[] = [
-  {
-    id: 1,
-    name: "Priya Thapa",
-    avatar: "/kajal.jpg",
-    faculty: "Computer Engineering",
-    interests: ["Machine Learning", "Computer Vision", "Python"],
-    reputation: 4.9,
-    github: "#",
-    linkedin: "#",
-    sharedInterests: 3,
-    isConnected: false
-  },
-  {
-    id: 2,
-    name: "Roshan Karki",
-    avatar: "/shahil.jpg",
-    faculty: "Information Technology",
-    interests: ["Blockchain", "Web3", "Backend Dev"],
-    reputation: 4.7,
-    github: "#",
-    linkedin: "#",
-    sharedInterests: 2,
-    isConnected: true
-  },
-  {
-    id: 3,
-    name: "Sita Rana",
-    avatar: "/kajalimage2.jpg",
-    faculty: "Software Engineering",
-    interests: ["Web Development", "React", "UI/UX"],
-    reputation: 4.6,
-    linkedin: "#",
-    sharedInterests: 4,
-    isConnected: false
-  },
-  {
-    id: 4,
-    name: "Bikash Gurung",
-    avatar: "/user1image.jpg",
-    faculty: "Computer Engineering",
-    interests: ["Cybersecurity", "Networking", "Linux"],
-    reputation: 4.8,
-    github: "#",
-    linkedin: "#",
-    sharedInterests: 1,
-    isConnected: false
-  },
-  {
-    id: 5,
-    name: "Anisha Basnet",
-    avatar: "/kajal.jpg",
-    faculty: "Information Technology",
-    interests: ["Data Science", "Visualization", "Statistics"],
-    reputation: 4.5,
-    linkedin: "#",
-    sharedInterests: 2,
-    isConnected: false
-  },
-  {
-    id: 6,
-    name: "Dipesh Magar",
-    avatar: "/shahil.jpg",
-    faculty: "Software Engineering",
-    interests: ["Mobile Dev", "Flutter", "Firebase"],
-    reputation: 4.4,
-    github: "#",
-    sharedInterests: 1,
-    isConnected: false
-  },
-  {
-    id: 7,
-    name: "Kabita Shrestha",
-    avatar: "/kajalimage2.jpg",
-    faculty: "Computer Engineering",
-    interests: ["AI", "NLP", "Research"],
-    reputation: 4.3,
-    linkedin: "#",
-    sharedInterests: 3,
-    isConnected: false
-  },
-  {
-    id: 8,
-    name: "Nabin Rai",
-    avatar: "/user1image.jpg",
-    faculty: "Information Technology",
-    interests: ["Cloud Computing", "AWS", "DevOps"],
-    reputation: 4.6,
-    github: "#",
-    linkedin: "#",
-    sharedInterests: 0,
-    isConnected: false
-  },
-  {
-    id: 9,
-    name: "Rekha Adhikari",
-    avatar: "/kajal.jpg",
-    faculty: "Software Engineering",
-    interests: ["Testing", "QA", "Automation"],
-    reputation: 4.2,
-    github: "#",
-    sharedInterests: 1,
-    isConnected: false
-  }
+  { id: 1, name: "Priya Thapa", avatar: "https://i.pravatar.cc/80?img=5", faculty: "Computer Engineering", interests: ["Machine Learning", "Computer Vision", "Python"], reputation: 4.9, github: "#", linkedin: "#", sharedInterests: 3, isConnected: false },
+  { id: 2, name: "Roshan Karki", avatar: "https://i.pravatar.cc/80?img=8", faculty: "Information Technology", interests: ["Blockchain", "Web3", "Backend Dev"], reputation: 4.7, github: "#", sharedInterests: 2, isConnected: true },
+  { id: 3, name: "Sita Rana", avatar: "https://i.pravatar.cc/80?img=12", faculty: "Software Engineering", interests: ["Web Development", "React", "UI/UX"], reputation: 4.6, linkedin: "#", sharedInterests: 4, isConnected: false },
+  { id: 4, name: "Bikash Gurung", avatar: "https://i.pravatar.cc/80?img=11", faculty: "Computer Engineering", interests: ["Cybersecurity", "Networking", "Linux"], reputation: 4.8, github: "#", linkedin: "#", sharedInterests: 1, isConnected: false },
+  { id: 5, name: "Anisha Basnet", avatar: "https://i.pravatar.cc/80?img=16", faculty: "Information Technology", interests: ["Data Science", "Visualization", "Statistics"], reputation: 4.5, linkedin: "#", sharedInterests: 2, isConnected: false },
+  { id: 6, name: "Dipesh Magar", avatar: "https://i.pravatar.cc/80?img=15", faculty: "Software Engineering", interests: ["Mobile Dev", "Flutter", "Firebase"], reputation: 4.4, github: "#", sharedInterests: 1, isConnected: false },
+  { id: 7, name: "Kabita Shrestha", avatar: "https://i.pravatar.cc/80?img=25", faculty: "Computer Engineering", interests: ["AI", "NLP", "Research"], reputation: 4.3, linkedin: "#", sharedInterests: 3, isConnected: false },
+  { id: 8, name: "Nabin Rai", avatar: "https://i.pravatar.cc/80?img=18", faculty: "Information Technology", interests: ["Cloud Computing", "AWS", "DevOps"], reputation: 4.6, github: "#", linkedin: "#", sharedInterests: 0, isConnected: false },
+  { id: 9, name: "Rekha Adhikari", avatar: "https://i.pravatar.cc/80?img=20", faculty: "Software Engineering", interests: ["Testing", "QA", "Automation"], reputation: 4.2, github: "#", sharedInterests: 1, isConnected: false },
 ];
 
 const FACULTIES = ["All", "Computer Engineering", "Information Technology", "Software Engineering"];

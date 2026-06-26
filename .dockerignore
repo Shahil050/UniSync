@@ -37,3 +37,6 @@
 
 # Vercel
 **/.vercel
+**/__init__.py
+**/faiss_papers_index
+**/resources/

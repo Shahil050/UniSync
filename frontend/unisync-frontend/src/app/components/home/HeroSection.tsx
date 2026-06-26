@@ -2,7 +2,6 @@
 
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
-import Image from "next/image";
 import { ArrowRight, Sparkles, Users, Star, BookOpen } from "lucide-react";
 
 const HERO_BG = "https://images.unsplash.com/photo-1644088379091-d574269d422f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNobm9sb2d5JTIwbmV0d29ya2luZyUyMG1vZGVybiUyMGFic3RyYWN0JTIwYmx1ZXxlbnwxfHx8fDE3ODIyNjAxMDl8MA&ixlib=rb-4.1.0&q=80&w=1080";
@@ -133,13 +132,7 @@ export function HeroSection({ onLoginClick, onSignupClick }: HeroProps) {
             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
             className="relative rounded-3xl overflow-hidden shadow-2xl border border-blue-400/30"
           >
-            <Image
-  src="/group7.jpg"
-  alt="Students collaborating"
-  width={700}
-  height={500}
-  className="w-full h-80 object-cover"
-/>
+            <img src={STUDENTS_IMG} alt="Students collaborating" className="w-full h-80 object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-blue-900/70 to-transparent" />
             <div className="absolute bottom-4 left-4 right-4 text-white">
               <p className="font-semibold text-sm">Pokhara University Students</p>
@@ -169,19 +162,15 @@ export function HeroSection({ onLoginClick, onSignupClick }: HeroProps) {
             className="absolute -top-4 -right-6 bg-white rounded-2xl shadow-xl p-4 flex items-center gap-3"
           >
             <div className="flex -space-x-2">
-  {[
-    "/kajal.jpg",
-    "/shahil.jpg",
-    "/rabindra.jpg",
-  ].map((image, index) => (
-    <img
-      key={index}
-      src={image}
-      alt="peer"
-      className="w-8 h-8 rounded-full border-2 border-white object-cover"
-    />
-  ))}
-</div>
+              {[1, 2, 3].map((i) => (
+                <img
+                  key={i}
+                  src={`https://i.pravatar.cc/32?img=${i + 10}`}
+                  alt="peer"
+                  className="w-8 h-8 rounded-full border-2 border-white object-cover"
+                />
+              ))}
+            </div>
             <div>
               <div className="font-semibold text-slate-800 text-sm">3 peers matched</div>
               <div className="text-blue-400 text-xs">Similar interests</div>

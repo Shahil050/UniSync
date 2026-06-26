@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import Image from "next/image";
 import { X, Mail, Lock, Eye, EyeOff, User, Zap, ArrowRight, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -84,18 +83,14 @@ export function SignupModal({ open, onClose, onLogin, onSwitchToLogin }: SignupM
                 <X size={16} />
               </button>
               <div className="flex items-center gap-3 mb-4">
-  <Image
-    src="/handshake-agreement-icon.avif"
-    alt="UniSync Logo"
-    width={48}
-    height={48}
-    className="rounded-xl"
-  />
-  <div>
-    <div className="font-black text-lg">UniSync</div>
-    <div className="text-blue-300 text-xs">Pokhara University</div>
-  </div>
-</div>
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Zap size={20} />
+                </div>
+                <div>
+                  <div className="font-black text-lg">UniSync</div>
+                  <div className="text-blue-300 text-xs">Pokhara University</div>
+                </div>
+              </div>
               <h2 className="text-2xl font-black mb-1">Create Account</h2>
               <p className="text-blue-200 text-sm">Step {step} of 3</p>
               {/* Progress bar */}
@@ -236,7 +231,6 @@ export function SignupModal({ open, onClose, onLogin, onSwitchToLogin }: SignupM
                     <p className="text-slate-700 text-sm"><span className="font-semibold">Name:</span> {form.name}</p>
                     <p className="text-slate-700 text-sm"><span className="font-semibold">Email:</span> {form.email}</p>
                     <p className="text-slate-700 text-sm"><span className="font-semibold">Faculty:</span> {form.faculty}</p>
-                    
                   </div>
                   <button
                     onClick={handleFinish}

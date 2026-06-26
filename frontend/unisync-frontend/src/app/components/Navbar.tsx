@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -38,9 +37,9 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md">
-  <Image src="/handshake-agreement-icon.avif" alt="UniSync logo" width={36} height={36} className="w-full h-full object-cover" />
-</div>
+            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-md group-hover:bg-blue-700 transition-colors">
+              <Zap size={20} className="text-white" />
+            </div>
             <div className="flex flex-col leading-none">
               <span className="text-blue-700 font-black text-lg tracking-tight">UniSync</span>
               <span className="text-blue-400 text-[10px] font-medium tracking-widest uppercase">Pokhara University</span>
