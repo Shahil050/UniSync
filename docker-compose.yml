@@ -11,75 +11,50 @@ services:
       - "3000:3000" 
     
     environment:
-      - REACT_APP_API_url=http://localhost:5000
-    restart: unless_stopped
-    # depends_on:
-    #   - backend
+      - REACT_APP_API_url=http://localhost:8000
+    restart: unless-stopped
+    depends_on:
+      - backend
 
     
 
-#   backend:
-#     build:
-#       context: ./backend
-#       dockerfile: Dockerfile
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
 
-#     container_name: backend/unisync_backend
-#     ports:
-#       - "8000:8000"
-#     environment:
-#       - PORT=8000
-#       - DATABASE_URL=postgresql://unisync_user:unisync_password@postgres:5432/unisync_db
-#       - AI_SERVICE_URL=http://ai-service:5000
+    container_name: unisync_backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - PORT=8000
+      - DATABASE_URL=postgresql://unisync_user:unisync_password@postgres:5432/unisync_db
+      - AI_SERVICE_URL=http://ai-service:5000
 
-#     restart: unless_stopped
-#     depends_on:
-#       postgres:
-#         condition: service_healthy
-#       # ai-service: 
-#       #   condition: service_started
+    restart: unless-stopped
+    depends_on:
+      - ai_service
 
 
-#   # ai-service:
-#   #   build:
-#   #     context: ./ai_services
-#   #     dockerfile: Dockerfile
-#   #   container_name: unisync-ai
-#   #   ports:
-#   #     - "5000:5000"
+  ai-service:
+    build:
+      context: ./ai_services
+      dockerfile: Dockerfile
+    container_name: unisync-ai
+    ports:
+      - "5000:5000"
 
-#   #   volumes:
-#   #     - ./ai_service:/app
-#   #     - huggingface_cache:/root/.cache/huggingface_cache
+    volumes:
+      - ./ai_service:/app
+      - huggingface_cache:/root/.cache/huggingface_cache
     
-#   #   restart: unless_stopped
 
-
-
-#   postgres:
-#     image: postgres:16-alpine
-#     container_name: unisync_postgres
-    
-#     ports:
-#       - "5432:5432"
-
-#     environment:
-#       - POSTGRES_USER=unisync_user
-#       - POSTGRES_PASSWORD=unisync_password
-#       - POSTGRES_DB=unisync_db
-
-#     volumes:
-#       - postgres_data:/var/lib/postgresql/data
-    
-#     restart: unless_stopped
-#     healthcheck:
-#       test: ["CMD-SHELL", "pg_isready -U unisync_user -d unisync_db"]
-#       interval: 5s
-#       timeout: 5s
-#       retries: 3
       
-# volumes:
-#   huggingface_cache:
-#   postgres_data:
+volumes:
+  huggingface_cache:
+  
       
       
 

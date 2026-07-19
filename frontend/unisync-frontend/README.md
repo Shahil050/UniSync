@@ -1,3 +1,56 @@
+# UniSync
+
+UniSync is an AI-powered peer matching and research collaboration platform built for students at Pokhara University in the Computer, IT, and Software Engineering faculties. It helps students discover peers with shared academic interests, post and join project ideas, form digital collaboration agreements, and track contributions through a verified, accountable workflow.
+
+## Problem
+
+Group academic projects often fail not due to lack of skill, but due to lack of structure — no easy way to find the right collaborators, no accountability when a teammate stops contributing, and no record of who actually did the work. UniSync addresses this through peer discovery, posted ideas, digital agreements, and activity tracking.
+
+## Tech Stack
+
+- **Framework:** Next.js 15 (App Router)
+- **UI:** React 19
+- **Styling:** Tailwind CSS v4
+- **Animation:** Motion (Framer Motion)
+- **Icons:** Lucide React
+- **State management:** React Context (`UserContext`)
+
+## Project Structure
+
+src/
+
+├── app/
+
+│   ├── layout.tsx          Root layout — global CSS, UserProvider, modals
+
+│   ├── page.tsx             Route: "/"
+
+│   ├── UserContext.tsx      Shared auth/user state
+
+│   ├── dashboard/            Route: "/dashboard"
+
+│   ├── features/             Route: "/features"
+
+│   ├── interests/            Route: "/interests"
+
+│   ├── pages/                  Page-level components
+
+│   └── components/
+
+│       ├── home/               Landing page sections
+
+│       ├── auth/                 Login / Signup modals
+
+│       ├── dashboard/             Dashboard tab modules
+
+│       └── shared/, ui/             Shared UI components
+
+└── styles/                       Global styles, design token
+
+
+
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
