@@ -35,7 +35,8 @@ services:
 
     restart: unless-stopped
     depends_on:
-      - ai_service
+      - ai-service
+      - postgres
 
 
   ai-service:
@@ -45,15 +46,29 @@ services:
     container_name: unisync-ai
     ports:
       - "5000:5000"
-
     volumes:
-      - ./ai_service:/app
-      - huggingface_cache:/root/.cache/huggingface_cache
+      - ./ai_services:/app
+      - huggingface_cache:/root/.cache/huggingface
     
+  postgres:
+    image: postgres:16-alpine
+    container_name: unisync_postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: unisync_user
+      POSTGRES_PASSWORD: unisync_password
+      POSTGRES_DB: unisync_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+
 
       
 volumes:
   huggingface_cache:
+  postgres_data:
   
       
       

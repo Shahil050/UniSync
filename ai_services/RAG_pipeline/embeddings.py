@@ -1,6 +1,7 @@
-from transformers import AutoTokenizer
-import onnxruntime as ort
+from langchain_community.embeddings import FastEmbedEmbeddings
 
-tokenizer=AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
-
-session= ort.InferenceSession("sentence-transformers/all-MiniLM-L6-v2")
+def get_embeddings():
+    embeddings=FastEmbedEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
+    )
+    return embeddings
