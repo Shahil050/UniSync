@@ -12,9 +12,11 @@ services:
     
     environment:
       - REACT_APP_API_url=http://localhost:8000
-    restart: unless-stopped
+    #restart: unless-stopped
     depends_on:
       - backend
+    networks:
+      - frontend-network
 
     
 
@@ -33,10 +35,14 @@ services:
       - DATABASE_URL=postgresql://unisync_user:unisync_password@postgres:5432/unisync_db
       - AI_SERVICE_URL=http://ai-service:5000
 
-    restart: unless-stopped
+    #restart: unless-stopped
     depends_on:
       - ai-service
       - postgres
+
+    networks:
+      - frontend-network
+      - backend-network
 
 
   ai-service:
@@ -50,10 +56,14 @@ services:
       - ./ai_services:/app
       - huggingface_cache:/root/.cache/huggingface
     
+    networks:
+      - backend-network
+
+
   postgres:
     image: postgres:16-alpine
     container_name: unisync_postgres
-    restart: unless-stopped
+    #restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
@@ -62,13 +72,22 @@ services:
       POSTGRES_DB: unisync_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
+    
+    networks:
+      - backend-network
 
 
       
 volumes:
   huggingface_cache:
   postgres_data:
+
+
+networks:
+  frontend-network:
+    driver: bridge
+  backend-network:
+    driver: bridge
   
       
       
