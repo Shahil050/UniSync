@@ -4,8 +4,15 @@ import { Footer } from "../components/Footer";
 import { User } from "lucide-react";
 import { motion } from "motion/react";
 import type { AppUser } from "../App";
+import type { Dispatch, SetStateAction } from "react";
 
-export function ProfilePage({ user }: { user: AppUser }) {
+export function ProfilePage({
+  user,
+  setUser,
+}: {
+  user: AppUser;
+  setUser: Dispatch<SetStateAction<AppUser>>;
+}) {
   return (
     <div className="min-h-screen bg-blue-50/50 pt-16">
       {/* Header */}
@@ -27,7 +34,7 @@ export function ProfilePage({ user }: { user: AppUser }) {
 
       <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <ProfileSection user={user} />
+          <ProfileSection user={user} setUser={setUser} />
         </div>
         <div>
           <ActivityLogs />

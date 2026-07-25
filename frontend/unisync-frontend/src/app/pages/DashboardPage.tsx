@@ -1,11 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
 import {
-  LayoutDashboard, User, Users, Lightbulb, FileSignature,
-  MessageCircle, BarChart2, Bell, Search, Trophy, Zap
+  LayoutDashboard,
+  User,
+  Users,
+  Lightbulb,
+  FileSignature,
+  MessageCircle,
+  BarChart2,
+  Bell,
+  Trophy,
+  Zap,
+  ChevronDown,
+  LogOut,
 } from "lucide-react";
 import { ProfileSection } from "../components/dashboard/ProfileSection";
 import { DiscoverPeers } from "../components/dashboard/DiscoverPeers";
@@ -21,39 +31,114 @@ type Tab = "overview" | "profile" | "discover" | "ideas" | "agreements" | "messa
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "overview", label: "Overview", icon: <LayoutDashboard size={16} /> },
-  { id: "profile", label: "Profile", icon: <User size={16} /> },
   { id: "discover", label: "Discover", icon: <Users size={16} /> },
   { id: "ideas", label: "Ideas", icon: <Lightbulb size={16} /> },
   { id: "agreements", label: "Agreements", icon: <FileSignature size={16} /> },
   { id: "messages", label: "Messages", icon: <MessageCircle size={16} /> },
   { id: "activity", label: "Activity", icon: <BarChart2 size={16} /> },
-  { id: "notifications", label: "Alerts", icon: <Bell size={16} /> },
+  { id: "notifications", label: "Notification", icon: <Bell size={16} /> },
 ];
 
-const LEADERBOARD = [
-  { rank: 1, name: "Hina Tamarakar", score: 2340, avatar: "/kajal.jpg" },
-  { rank: 2, name: "Shahil Shrestha", score: 2210, avatar: "/user1image.jpg" },
-  { rank: 3, name: "You", score: 1980, avatar: "/kajalimage2.jpg", isMe: true },
-  { rank: 4, name: "Rabindra Yadav", score: 1820, avatar: "/shahil.jpg" },
-];
 export function DashboardPage() {
-  const { user } = useUser();
+ const { user, onLogout } = useUser();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
-
+  const [profileOpen, setProfileOpen] = useState(false);
   return (
     <div className="min-h-screen bg-blue-50/50 pt-16">
       {/* Top bar */}
       <div className="bg-white border-b border-blue-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center gap-4 py-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg overflow-hidden">
-                <Image src="/handshake-agreement-icon.avif" alt="UniSync logo" width={32} height={32} className="w-full h-full object-cover" />
-              </div>
-              <span className="font-bold text-slate-700 text-sm hidden sm:block">Dashboard</span>
-            </div>
-            <SearchBar className="flex-1 max-w-md" />
+          <div className="flex items-center justify-between gap-4 py-3">
+
+  <div className="flex items-center gap-4 flex-1">
+    <div className="flex items-center gap-2">
+      <div className="w-8 h-8 rounded-lg overflow-hidden">
+        <Image
+          src="/handshake-agreement-icon.avif"
+          alt="UniSync logo"
+          width={32}
+          height={32}
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      <span className="font-bold text-slate-700 text-sm hidden sm:block">
+        Dashboard
+      </span>
+    </div>
+
+    <SearchBar className="flex-1 max-w-md" />
+  </div>
+
+  {/* Profile */}
+  <div className="relative">
+    <button
+      onClick={() => setProfileOpen(!profileOpen)}
+      className="flex items-center gap-2 rounded-xl p-1 hover:bg-blue-50 transition"
+    >
+      <img
+        src={user.avatar}
+        alt={user.name}
+        className="w-10 h-10 rounded-full border-2 border-blue-200 object-cover"
+      />
+      <ChevronDown size={16} className="text-slate-500" />
+    </button>
+
+    <AnimatePresence>
+      {profileOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="absolute right-0 mt-3 w-72 rounded-2xl bg-white shadow-2xl border border-blue-100 overflow-hidden z-50"
+        >
+          <div className="p-5 text-center border-b border-slate-100">
+            <img
+              src={user.avatar}
+              alt={user.name}
+              className="w-20 h-20 rounded-full mx-auto border-4 border-blue-100 object-cover"
+            />
+
+            <h3 className="font-bold text-slate-800 mt-3">
+              {user.name}
+            </h3>
+
+            <p className="text-sm text-slate-500">
+              {user.email}
+            </p>
           </div>
+
+          <div className="p-4 space-y-2">
+
+            <button
+              onClick={() => {
+                setActiveTab("profile");
+                setProfileOpen(false);
+              }}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2.5 font-medium transition"
+            >
+              View Profile
+            </button>
+
+            <button
+              onClick={() => {
+    onLogout();
+    setProfileOpen(false);
+}}
+              className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 border border-red-200 text-red-600 hover:bg-red-50 transition"
+            >
+              <LogOut size={16} />
+              Logout
+            </button>
+
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
+  </div>
+
+</div>
 
           {/* Tab navigation */}
           <div className="flex overflow-x-auto gap-1 pb-0 scrollbar-hide">
@@ -131,36 +216,6 @@ export function DashboardPage() {
 
             {/* Right column */}
             <div className="space-y-5">
-              {/* Leaderboard */}
-              <div className="bg-white rounded-2xl border border-blue-100 shadow-sm p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <Trophy size={16} className="text-amber-500" />
-                  <h3 className="font-bold text-slate-800">Leaderboard</h3>
-                </div>
-                <div className="space-y-3">
-                  {LEADERBOARD.map((entry) => (
-                    <div
-                      key={entry.rank}
-                      className={`flex items-center gap-3 p-2 rounded-xl ${entry.isMe ? "bg-blue-50 border border-blue-200" : ""}`}
-                    >
-                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${
-                        entry.rank === 1 ? "bg-amber-400 text-white" :
-                        entry.rank === 2 ? "bg-slate-300 text-slate-700" :
-                        entry.rank === 3 ? "bg-orange-300 text-white" :
-                        "bg-blue-100 text-blue-600"
-                      }`}>
-                        {entry.rank}
-                      </span>
-                      <img src={entry.avatar} alt={entry.name} className="w-8 h-8 rounded-full object-cover" />
-                      <span className={`flex-1 text-sm ${entry.isMe ? "font-bold text-blue-700" : "text-slate-700"}`}>
-                        {entry.name}
-                      </span>
-                      <span className="text-xs font-bold text-slate-500">{entry.score.toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               {/* Quick notifications */}
               <div className="bg-white rounded-2xl border border-blue-100 shadow-sm p-5">
                 <div className="flex items-center justify-between mb-3">

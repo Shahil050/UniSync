@@ -27,8 +27,8 @@ export function Navbar() {
   const { user, onLogout, openLogin, openSignup } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const pathname = usePathname();
-
+ const pathname = usePathname();
+const isDashboard = pathname === "/dashboard";
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
@@ -68,47 +68,56 @@ export function Navbar() {
           {/* Right side */}
           <div className="hidden md:flex items-center gap-2">
             {user.isLoggedIn ? (
-              <div className="relative">
-                <button
-                  onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-all"
-                >
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="w-7 h-7 rounded-full object-cover border-2 border-blue-200"
-                  />
-                  <span className="text-sm font-medium text-slate-700">{user.name.split(" ")[0]}</span>
-                  <ChevronDown size={14} className="text-slate-400" />
-                </button>
-                <AnimatePresence>
-                  {profileOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-blue-100 overflow-hidden"
-                    >
-                      <Link
-                        href="/profile"
-                        onClick={() => setProfileOpen(false)}
-                        className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:bg-blue-50 transition-colors"
-                      >
-                        <User size={16} className="text-blue-500" />
-                        My Profile
-                      </Link>
-                      <button
-                        onClick={() => { onLogout(); setProfileOpen(false); }}
-                        className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors border-t border-slate-100"
-                      >
-                        <LogOut size={16} />
-                        Logout
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ) : (
+  isDashboard ? null : (
+    <div className="relative">
+      <button
+        onClick={() => setProfileOpen(!profileOpen)}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-all"
+      >
+        <img
+          src={user.avatar}
+          alt={user.name}
+          className="w-7 h-7 rounded-full object-cover border-2 border-blue-200"
+        />
+        <span className="text-sm font-medium text-slate-700">
+          {user.name.split(" ")[0]}
+        </span>
+        <ChevronDown size={14} className="text-slate-400" />
+      </button>
+
+      <AnimatePresence>
+        {profileOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-blue-100 overflow-hidden"
+          >
+            <Link
+              href="/profile"
+              onClick={() => setProfileOpen(false)}
+              className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:bg-blue-50 transition-colors"
+            >
+              <User size={16} className="text-blue-500" />
+              My Profile
+            </Link>
+
+            <button
+              onClick={() => {
+                onLogout();
+                setProfileOpen(false);
+              }}
+              className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors border-t border-slate-100"
+            >
+              <LogOut size={16} />
+              Logout
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+) : (
               <>
                 <button
                   onClick={openLogin}
