@@ -1,6 +1,4 @@
 from fastapi import APIRouter, HTTPException
-
-
 from .recommend import get_recommendations_by_query
 router=APIRouter()
 

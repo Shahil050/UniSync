@@ -1,21 +1,5 @@
 import os
-
-
 from langchain_community.vectorstores import FAISS
-
-# #creating faiss index
-# def create_vector_index(documents,embeddings):
-#     vectorstore=FAISS.from_documents(
-#         documents=documents,
-#         embedding=embeddings
-#     )
-#     return vectorstore
-
-# #saving vector embeddings
-# def save_vector_index(vectorstore,path="faiss_index"):
-#     vectorstore.save_local(path)
-
-
 
 def save_or_update_vector_index(documents, embeddings, path="faiss_index"):
     """
@@ -26,7 +10,7 @@ def save_or_update_vector_index(documents, embeddings, path="faiss_index"):
     index_file = os.path.join(path, "index.faiss")
     
     if os.path.exists(index_file):
-        print(f"🔄 Existing index found at '{path}'. Loading and merging new documents...")
+        print(f"Existing index found at '{path}'. Loading and merging new documents...")
         # 1. Load the existing index
         # allow_dangerous_deserialization=True is required by LangChain to load local pickle files
         vectorstore = FAISS.load_local(
@@ -37,7 +21,7 @@ def save_or_update_vector_index(documents, embeddings, path="faiss_index"):
         # 2. Append the new document chunks without losing old ones
         vectorstore.add_documents(documents)
     else:
-        print(f"✨ No index found at '{path}'. Creating a brand new FAISS index...")
+        print(f" No index found at '{path}'. Creating a brand new FAISS index...")
         # 1. Create fresh index if it doesn't exist yet
         vectorstore = FAISS.from_documents(
             documents=documents,
@@ -46,7 +30,7 @@ def save_or_update_vector_index(documents, embeddings, path="faiss_index"):
     
     # Save the updated/new index back to disk
     vectorstore.save_local(path)
-    print(f"💾 Vector store successfully saved to '{path}'.")
+    print(f" Vector store successfully saved to '{path}'.")
     return vectorstore
 
 
@@ -73,10 +57,10 @@ def similarity_search_with_score(query, embeddings, path="faiss_index", k=4):
     vectorstore = load_vector_index(embeddings, path=path)
     
     if vectorstore is None:
-        print(f"❌ Error: No FAISS index found at '{path}'. Please index documents first.")
+        print(f"Error: No FAISS index found at '{path}'. Please index documents first.")
         return []
         
-    print(f"🔍 Searching index at '{path}' for query: '{query}'...")
+    print(f"Searching index at '{path}' for query: '{query}'...")
     
     # 2. Perform the similarity search with score
     results = vectorstore.similarity_search_with_score(query, k=k)

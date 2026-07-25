@@ -1,0 +1,8 @@
+**Ai Service Api**
+
+Get paper recommendation
+GET : "http://ai-service:5000/getpapers/recommend"
+
+
+entering pdf
+POST : "http://ai-service:5000/get_pdf/pdf/enter_pdf"
