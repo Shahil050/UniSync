@@ -4,9 +4,26 @@ import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
+export const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
+export const SESSION_COOKIE_NAME =
+  process.env.NODE_ENV === "production"
+    ? "__Secure-authjs.session-token"
+    : "authjs.session-token";
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: SESSION_MAX_AGE },
+  cookies: {
+    sessionToken: {
+      name: SESSION_COOKIE_NAME,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
   providers: [
     Credentials({
       credentials: {
@@ -28,9 +45,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
         if (!passwordMatch) return null;
 
-        // Returning null here would show a generic error; throwing with a
-        // specific message lets the error page distinguish this case via
-        // the ?error= query param NextAuth appends on redirect.
         if (!user.emailVerified) {
           throw new Error("EmailNotVerified");
         }
