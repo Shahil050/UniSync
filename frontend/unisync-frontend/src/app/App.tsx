@@ -16,37 +16,38 @@ export type AppUser = {
   email: string;
   avatar: string;
   isLoggedIn: boolean;
-
-  bio: string;
-  github: string;
-  linkedin: string;
-  portfolio: string;
+  bio?: string;
+  github?: string;
+  linkedin?: string;
+  portfolio?: string;
+  avatarUrl?: string;
+  coverUrl?: string;
 };
 
 export default function App() {
   const [user, setUser] = useState<AppUser>({
-  name: "Aarav Sharma",
-  email: "aarav.sharma@pu.edu.np",
-  avatar:
-    "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=80&h=80&fit=crop&crop=face",
-  isLoggedIn: false,
-
-  bio: "Computer Engineering student at Pokhara University.",
-  github: "",
-  linkedin: "",
-  portfolio: "",
-});
+    name: "Aarav Sharma",
+    email: "aarav.sharma@pu.edu.np",
+    avatar:
+      "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=80&h=80&fit=crop&crop=face",
+    isLoggedIn: false,
+    bio: "Computer Engineering student at Pokhara University.",
+    github: "",
+    linkedin: "",
+    portfolio: "",
+  });
 
   const handleLogin = (name: string, email: string) => {
-  setUser((prev) => ({
-    ...prev,
-    name,
-    email,
-    isLoggedIn: true,
-  }));
-};
+    setUser((prev) => ({
+      ...prev,
+      name,
+      email,
+      isLoggedIn: true,
+    }));
+  };
+
   const handleLogout = () => {
-    setUser({ ...user, isLoggedIn: false });
+    setUser((prev) => ({ ...prev, isLoggedIn: false }));
   };
 
   return (
@@ -54,64 +55,56 @@ export default function App() {
       <div className="min-h-screen bg-white text-slate-900 font-sans">
         <Navbar />
         <Routes>
-  <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/features" element={<FeaturesPage />} />
+          <Route path="/interests" element={<InterestSelectionPage />} />
 
-  <Route path="/features" element={<FeaturesPage />} />
+          <Route
+            path="/dashboard"
+            element={
+              user.isLoggedIn ? (
+                <DashboardPage user={user} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
 
-  <Route
-    path="/interests"
-    element={<InterestSelectionPage />}
-  />
+          <Route
+            path="/discover"
+            element={
+              user.isLoggedIn ? (
+                <DiscoverPage />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
 
-  <Route
-    path="/dashboard"
-    element={
-      user.isLoggedIn ? (
-        <DashboardPage user={user} />
-      ) : (
-        <Navigate to="/" replace />
-      )
-    }
-  />
+          <Route
+            path="/messages"
+            element={
+              user.isLoggedIn ? (
+                <MessagesPage user={user} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
 
-  <Route
-    path="/discover"
-    element={
-      user.isLoggedIn ? (
-        <DiscoverPage />
-      ) : (
-        <Navigate to="/" replace />
-      )
-    }
-  />
+          <Route
+            path="/profile"
+            element={
+              user.isLoggedIn ? (
+                <ProfilePage user={user} setUser={setUser} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
 
-  <Route
-    path="/messages"
-    element={
-      user.isLoggedIn ? (
-        <MessagesPage user={user} />
-      ) : (
-        <Navigate to="/" replace />
-      )
-    }
-  />
-
-  <Route
-    path="/profile"
-    element={
-      user.isLoggedIn ? (
-        <ProfilePage
-          user={user}
-          setUser={setUser}
-        />
-      ) : (
-        <Navigate to="/" replace />
-      )
-    }
-  />
-
-  <Route path="*" element={<Navigate to="/" replace />} />
-</Routes>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </div>
     </BrowserRouter>
   );
