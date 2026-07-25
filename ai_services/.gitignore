@@ -1,1 +1,17 @@
 .env
+.venv/
+venv/
+ai_services/.venv/
+
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+.cache/
+.env
+.git/
+
+**/__init__.py
+**/faiss_papers_index
+**/resources/
