@@ -1,4 +1,6 @@
 import os
+from documents import create_documents
+from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
 
 def save_or_update_vector_index(documents, embeddings, path="faiss_index"):
@@ -66,4 +68,86 @@ def similarity_search_with_score(query, embeddings, path="faiss_index", k=4):
     results = vectorstore.similarity_search_with_score(query, k=k)
     
     return results
+
+
+def add_pdf_to_fiass(pdf_id:str, chunks:list[str],embeddings,path="faiss_index")
+    documents=create_documents(chunks=chunks,pdf_id=pdf_id)
+    return save_or_update_vector_index(documents,embeddings,path=path)
+
+def add_user_to_fiass(user_id:str,interest:list[str],embeddings,path="fiass_index"):
+    documents=f"interest:{', '.join(interest)}"
+    user_doc=Document(
+        page_content=interest_text,
+        metadata={
+            "doc_type":"user",
+            "user_id":user_id
+        }
+    )
+    return save_or_update_vector_index([user_doc],embeddings,path=path)
+
+def get_recommendations_for_user(user_id:str, embeddings,path="faiss_index",k:int=5):
+    vectorstore=load_vector_index(embeddings,path=path)
+    if not vectorstore:
+        return []
+    
+    all_docs=list(vectorstore.docstore._dict.values())
+    target_user_doc=next((d for d in all_docs if d.metadata.get("user_id")==user_id),None)
+
+    if not target_user_doc:
+        return []
+    
+    results=vectorstore.similarity_search_with_relevance_scores(
+        query=target_user_doc.page_content,
+        k=k*4,
+        filter={"doc_type":"pdf"}
+    )
+    recommended_pdf_ids=[]
+    seen=set()
+    for doc, _ in results:
+        p_id=doc.metadata.get("pdf_id")
+        if p_id and p_id not in seen:
+            seen.add(p_id)
+            recommended_pdf_ids.append(p_id)
+            if len(recommended_pdf_ids)==k:
+                break
+
+    return recommended_pdf_ids
+
+
+
+def get_recommendations_for_pdf(pdf_id: str, embeddings, path="faiss_index", k: int = 5):
+    """
+    Looks up a PDF's vector in FAISS and finds interested User IDs.
+    Returns a list of unique user_ids.
+    """
+    vectorstore = load_vector_index(embeddings, path=path)
+    if not vectorstore:
+        return []
+
+    # 1. Retrieve the first chunk of the PDF
+    all_docs = list(vectorstore.docstore._dict.values())
+    target_pdf_doc = next((d for d in all_docs if d.metadata.get("pdf_id") == pdf_id), None)
+    
+    if not target_pdf_doc:
+        return []
+
+    # 2. Similarity search filtered ONLY for Users
+    results = vectorstore.similarity_search_with_score(
+        query=target_pdf_doc.page_content,
+        k=k * 2,
+        filter={"doc_type": "user"}
+    )
+
+    # 3. Collect unique user_ids
+    recommended_user_ids = []
+    seen = set()
+    for doc, _ in results:
+        u_id = doc.metadata.get("user_id")
+        if u_id and u_id not in seen:
+            seen.add(u_id)
+            recommended_user_ids.append(u_id)
+            if len(recommended_user_ids) == k:
+                break
+
+    return recommended_user_ids
 

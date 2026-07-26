@@ -3,7 +3,7 @@ import shutil
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from RAG_pipeline.ingest import ingest
 
-router = APIRouter(prefix="/pdf", tags=["PDF System"])
+router = APIRouter()
 
 # Match this path with the index storage directory used by your recommend endpoint
 PAPERS_INDEX_PATH = "faiss_papers_index"
