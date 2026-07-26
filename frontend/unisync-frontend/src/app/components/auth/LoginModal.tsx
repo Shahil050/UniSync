@@ -10,7 +10,7 @@ import { ApiError } from "@/src/lib/api-client";
 type LoginModalProps = {
   open: boolean;
   onClose: () => void;
-  onLogin: (name: string, email: string) => void;
+  onLogin: (id: string, name: string, email: string) => void;
   onSwitchToSignup: () => void;
 };
 
@@ -111,7 +111,7 @@ export function LoginModal({ open, onClose, onLogin, onSwitchToSignup }: LoginMo
     setLoading(true);
     try {
       const res = await authApi.login({ email, password });
-      onLogin(res.user.name, res.user.email);
+      onLogin(res.user.id, res.user.name, res.user.email);
       onClose();
       setEmail("");
       setPassword("");

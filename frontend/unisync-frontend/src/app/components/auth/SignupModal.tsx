@@ -9,7 +9,6 @@ import { ApiError } from "next/dist/server/api-utils";
 type SignupModalProps = {
   open: boolean;
   onClose: () => void;
-  onLogin: (name: string, email: string) => void;
   onSwitchToLogin: () => void;
 };
 

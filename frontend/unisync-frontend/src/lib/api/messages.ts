@@ -7,5 +7,7 @@ export const messagesApi = {
   dmThread: (userId: string, cursor?: string) =>
     api.get(`/api/messages/thread/${userId}${cursor ? `?cursor=${cursor}` : ""}`),
 
+  listConversations: () => api.get("/api/messages/conversations"),
+  
   remove: (id: string) => api.delete(`/api/messages/${id}`),
 };
