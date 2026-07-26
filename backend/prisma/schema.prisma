@@ -121,6 +121,7 @@ model User {
   badges             UserBadge[]
   embedding          UserEmbedding?
   skills             UserSkill[]
+  papers             Paper[]
 
   @@index([deletedAt])
 }
@@ -427,4 +428,17 @@ model ModerationFlag {
 
   @@index([contentType, contentId])
   @@index([reviewedById])
+}
+
+// ------------PAPER AND RECOMMENDATION------------
+model Paper {
+  id        String   @id @default(uuid()) @db.Uuid
+  title     String
+  authors   String?
+  addedById String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  addedBy User @relation(fields: [addedById], references: [id])
+
+  @@index([addedById])
 }
