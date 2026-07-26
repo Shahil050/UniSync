@@ -2,9 +2,10 @@ import { MessagesModule } from "../components/dashboard/MessagesModule";
 import { Footer } from "../components/Footer";
 import { MessageCircle } from "lucide-react";
 import { motion } from "motion/react";
-import type { AppUser } from "../App";
+import { useUser } from "../UserContext";
 
-export function MessagesPage({ user }: { user: AppUser }) {
+export function MessagesPage() {
+  const { user } = useUser();
   return (
     <div className="min-h-screen bg-blue-50/50 pt-16">
       {/* Header */}

@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -12,10 +7,57 @@ datasource db {
   provider = "postgresql"
 }
 
-// ENUMS
+// ------------ENUMS------------
 enum UserRole {
   STUDENT
   ADMIN
+}
+
+enum ProjectRole {
+  OWNER
+  CONTRIBUTOR
+}
+
+enum ProjectStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum MemberStatus {
+  PENDING
+  ACTIVE
+  LEFT
+  REMOVED
+  REJECTED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  STATUS_CHANGE
+}
+
+enum ContractStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  BREACHED
+}
+
+enum ActivityType {
+  COMMIT
+  UPLOAD
+  MESSAGE
+  MILESTONE
+  OTHER
+}
+
+enum PenaltySeverity {
+  MINOR
+  MAJOR
 }
 
 enum TagType {
@@ -23,35 +65,63 @@ enum TagType {
   INTEREST
 }
 
-// USER
+enum ContentType {
+  MESSAGE
+  PROJECT_DESCRIPTION
+  COMMENT
+  BIO
+}
+
+enum FlagType {
+  SPAM
+  TOXIC
+  CLEAN
+}
+
+enum ModerationStatus {
+  PENDING
+  APPROVED
+  REMOVED
+}
+
+// ------------USER AND USER SKILLS------------
 model User {
-  id            String    @id @default(uuid()) @db.Uuid
-  fullName      String
-  email         String    @unique
-  passwordHash  String
-  emailVerified DateTime?
+  id                 String                   @id @default(uuid()) @db.Uuid
+  fullName           String
+  email              String                   @unique
+  passwordHash       String
+  department         String?
+  batch              String?
+  githubUrl          String?
+  linkedinUrl        String?
+  profileImage       String?
+  role               UserRole                 @default(STUDENT)
+  bio                String?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  deletedAt          DateTime?
+  emailVerified      DateTime?
+  institutionId      String?                  @db.Uuid
 
-  institutionId String?   @db.Uuid
-  department    String?
-  batch         String?
-
-  githubUrl     String?
-  linkedinUrl   String?
-  profileImage  String?
-
-  role          UserRole  @default(STUDENT)
-  bio           String?
-
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime?
-
-  institution        Institution?  @relation(fields: [institutionId], references: [id], onDelete:SetNull)
-  verificationTokens EmailVerificationToken[]
   accounts           Account[]
+  activityLogs       ActivityLog[]
+  contractRoles      ContractRole[]
+  contractSignatures ContractSignature[]
+  credentials        Credential[]
+  verificationTokens EmailVerificationToken[]
+  receivedMessages   Message[]                @relation("ReceivedMessages")
+  sentMessages       Message[]                @relation("SentMessages")
+  reviewedFlags      ModerationFlag[]
+  penaltyTags        PenaltyTag[]
+  ownedProjects      Project[]
+  projectAuditLogs   ProjectAuditLog[]
+  projectMemberships ProjectMember[]
   sessions           Session[]
-  skills             UserSkill[]
+  institution        Institution?             @relation(fields: [institutionId], references: [id])
+  badges             UserBadge[]
   embedding          UserEmbedding?
+  skills             UserSkill[]
+  papers             Paper[]
 
   @@index([deletedAt])
 }
@@ -75,7 +145,7 @@ model EmailVerificationToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// AUTH
+// ------------AUTH------------
 model Account {
   id                String  @id @default(uuid()) @db.Uuid
   userId            String  @db.Uuid
@@ -118,16 +188,17 @@ model Skill {
   name     String
   type     TagType
   category String?
-  users    UserSkill[]
+
+  users UserSkill[]
 
   @@unique([name, type])
 }
 
 model UserSkill {
-  id           String @id @default(uuid()) @db.Uuid
-  userId       String @db.Uuid
-  skillId      String @db.Uuid
-  proficiency  Int?   // for when skill.type == SKILL; left null for INTEREST
+  id          String @id @default(uuid()) @db.Uuid
+  userId      String @db.Uuid
+  skillId     String @db.Uuid
+  proficiency Int?   // for when skill.type == SKILL; left null for INTEREST
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
@@ -145,4 +216,229 @@ model UserEmbedding {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// ------------PROJECTS AND COLLABORATION------------
+model Project {
+  id          String        @id @default(uuid()) @db.Uuid
+  title       String
+  description String?
+  ownerId     String        @db.Uuid
+  status      ProjectStatus @default(OPEN)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
 
+  activityLogs  ActivityLog[]
+  contract      Contract?
+  credentials   Credential[]
+  messages      Message[]
+  penaltyTags   PenaltyTag[]
+  owner         User              @relation(fields: [ownerId], references: [id])
+  auditLogs     ProjectAuditLog[]
+  members       ProjectMember[]
+  badgesAwarded UserBadge[]
+
+  @@index([status])
+  @@index([deletedAt])
+  @@index([ownerId])
+}
+
+model ProjectMember {
+  id        String       @id @default(uuid()) @db.Uuid
+  projectId String       @db.Uuid
+  userId    String       @db.Uuid
+  status    MemberStatus @default(PENDING)
+  joinedAt  DateTime     @default(now())
+  leftAt    DateTime?
+  role      ProjectRole  @default(CONTRIBUTOR)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId])
+}
+
+model ProjectAuditLog {
+  id        String      @id @default(uuid()) @db.Uuid
+  projectId String      @db.Uuid
+  userId    String      @db.Uuid
+  action    AuditAction
+  changes   Json?
+  createdAt DateTime    @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@index([userId])
+}
+
+// ------------DIGITAL AGREEMENT------------
+model Contract {
+  id          String         @id @default(uuid()) @db.Uuid
+  projectId   String         @unique @db.Uuid
+  content     Json
+  status      ContractStatus @default(DRAFT)
+  createdAt   DateTime       @default(now())
+  finalizedAt DateTime?
+  deletedAt   DateTime?
+
+  project    Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  roles      ContractRole[]
+  signatures ContractSignature[]
+}
+
+model ContractRole {
+  id               String  @id @default(uuid()) @db.Uuid
+  contractId       String  @db.Uuid
+  userId           String  @db.Uuid
+  roleTitle        String
+  responsibilities String?
+  expectedHours    Int?
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([contractId, userId])
+  @@index([contractId])
+  @@index([userId])
+}
+
+model ContractSignature {
+  id         String   @id @default(uuid()) @db.Uuid
+  contractId String   @db.Uuid
+  userId     String   @db.Uuid
+  signedAt   DateTime @default(now())
+  ipAddress  String?
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([contractId, userId])
+  @@index([userId])
+}
+
+// ------------ACCOUNTABILITY LOOP------------
+model ActivityLog {
+  id           String       @id @default(uuid()) @db.Uuid
+  projectId    String       @db.Uuid
+  userId       String       @db.Uuid
+  activityType ActivityType
+  description  String?
+  metadata     Json?
+  createdAt    DateTime     @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@index([userId])
+}
+
+model Badge {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String  @unique
+  description String?
+  criteria    String?
+  iconUrl     String?
+
+  userBadges UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  badgeId   String   @db.Uuid
+  projectId String?  @db.Uuid
+  awardedAt DateTime @default(now())
+
+  badge   Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId, projectId])
+  @@index([userId])
+  @@index([badgeId])
+  @@index([projectId])
+}
+
+model PenaltyTag {
+  id         String          @id @default(uuid()) @db.Uuid
+  userId     String          @db.Uuid
+  projectId  String          @db.Uuid
+  reason     String
+  severity   PenaltySeverity @default(MINOR)
+  issuedAt   DateTime        @default(now())
+  resolvedAt DateTime?
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([projectId])
+}
+
+model Credential {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @db.Uuid
+  projectId        String?  @db.Uuid
+  credentialType   String
+  issuedAt         DateTime @default(now())
+  verificationHash String   @unique
+  pdfUrl           String?
+
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([projectId])
+}
+
+// ------------MESSAGING AND MODERATION------------
+model Message {
+  id          String    @id @default(uuid()) @db.Uuid
+  projectId   String?   @db.Uuid
+  senderId    String    @db.Uuid
+  recipientId String?   @db.Uuid
+  content     String
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
+
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sender    User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient User?    @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([deletedAt])
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([projectId, createdAt])
+}
+
+model ModerationFlag {
+  id              String           @id @default(uuid()) @db.Uuid
+  contentType     ContentType
+  contentId       String           @db.Uuid
+  flagType        FlagType
+  confidenceScore Float
+  status          ModerationStatus @default(PENDING)
+  reviewedById    String?          @db.Uuid
+  createdAt       DateTime         @default(now())
+
+  reviewedBy User? @relation(fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([contentType, contentId])
+  @@index([reviewedById])
+}
+
+// ------------PAPER AND RECOMMENDATION------------
+model Paper {
+  id        String   @id @default(uuid()) @db.Uuid
+  title     String
+  authors   String?
+  addedById String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  addedBy User @relation(fields: [addedById], references: [id])
+
+  @@index([addedById])
+}

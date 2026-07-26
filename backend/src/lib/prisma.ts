@@ -3,9 +3,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 
 type ExtArgs = { model: string; args: any; query: (args: any) => Promise<any> };
 
-const SOFT_DELETE_MODELS = ["User"];
-// Add later
-// const SOFT_DELETE_MODELS = ["User", "Project", "Paper", "Message", "Contract"];
+const SOFT_DELETE_MODELS = ["User", "Project", "Paper", "Message", "Contract"];
 
 function createPrismaClient() {
     const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
