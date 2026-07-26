@@ -1,0 +1,39 @@
+name: CI - Build and Test Stack
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  compose-test:
+    name: Validate Docker Compose Stack
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create dummy .env for backend
+        run: |
+          mkdir -p backend
+          touch backend/.env
+          echo "PORT=8000" >> backend/.env
+          echo "DATABASE_URL=postgresql://unisync_user:unisync_password@postgres:5432/unisync_db" >> backend/.env
+
+      - name: Build custom images
+        run: docker compose build
+
+      - name: Start stack in detached mode
+        run: docker compose up -d
+
+      - name: Check running containers
+        run: |
+          sleep 10
+          docker compose ps
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose down -v

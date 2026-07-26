@@ -9,7 +9,7 @@ export async function sendVerificationEmail({
   to: string;
   token: string;
 }) {
-  const verifyUrl = `${process.env.NEXTAUTH_URL}/api/auth/verify-email?token=${token}`;
+  const verifyUrl = `${process.env.NEXTAUTH_URL}/api/verify-email?token=${token}`;
 
   await transporter.sendMail({
     from: process.env.EMAIL_FROM,
