@@ -4,6 +4,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Mail, Lock, Eye, EyeOff, Zap, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { authApi } from "@/src/lib/api/auth";
+import { ApiError } from "@/src/lib/api-client";
 
 type LoginModalProps = {
   open: boolean;
@@ -18,83 +20,111 @@ export function LoginModal({ open, onClose, onLogin, onSwitchToSignup }: LoginMo
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [step, setStep] = useState<"login" | "verification">("login");
-  const [verificationCode, setVerificationCode] = useState("");
-  const [generatedCode, setGeneratedCode] = useState("");
+  // const [step, setStep] = useState<"login" | "verification">("login");
+  // const [verificationCode, setVerificationCode] = useState("");
+  // const [generatedCode, setGeneratedCode] = useState("");
   const router = useRouter();
 
-  const isValidEmail = (emailValue: string) => {
-  return emailValue.endsWith("@gmail.com") || emailValue.endsWith("@eemc.edu.np");
-};
-  const generateVerificationCode = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  };
+//   const isValidEmail = (emailValue: string) => {
+//   return emailValue.endsWith("@gmail.com") || emailValue.endsWith("@eemc.edu.np");
+// };
+//   const generateVerificationCode = () => {
+//     return Math.floor(100000 + Math.random() * 900000).toString();
+//   };
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+//   const handleEmailSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
     
-    if (!email) {
-      setError("Please enter your email");
-      return;
-    }
+//     if (!email) {
+//       setError("Please enter your email");
+//       return;
+//     }
 
-    if (!isValidEmail(email)) {
-      setError("Please use Gmail or your college email address.");
+//     if (!isValidEmail(email)) {
+//       setError("Please use Gmail or your college email address.");
+//       return;
+//     }
+
+//     setLoading(true);
+//     setError("");
+
+//     // Simulate sending verification code
+//     await new Promise((r) => setTimeout(r, 1000));
+    
+//     const code = generateVerificationCode();
+//     setGeneratedCode(code);
+    
+//     // In a real app, you would send this code via email
+//     console.log(`Verification code sent to ${email}: ${code}`);
+    
+//     setStep("verification");
+//     setLoading(false);
+//   };
+
+//   const handleVerificationSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+
+//     if (!verificationCode) {
+//       setError("Please enter the verification code");
+//       return;
+//     }
+
+//     if (verificationCode !== generatedCode) {
+//       setError("Invalid verification code. Please try again.");
+//       return;
+//     }
+
+//     setLoading(true);
+//     setError("");
+
+//     await new Promise((r) => setTimeout(r, 1000));
+
+//     const name = email.split("@")[0].replace(".", " ").replace(/\b\w/g, (c) => c.toUpperCase());
+//     onLogin(name, email);
+//     setLoading(false);
+//     onClose();
+    
+//     // Reset states
+//     setEmail("");
+//     setPassword("");
+//     setVerificationCode("");
+//     setStep("login");
+    
+//     router.push("/dashboard");
+//   };
+
+//   const handleBackToLogin = () => {
+//     setStep("login");
+//     setVerificationCode("");
+//     setError("");
+//   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!email || !password) {
+      setError("Please enter your email and password.");
       return;
     }
 
     setLoading(true);
-    setError("");
+    try {
+      const res = await authApi.login({ email, password });
+      onLogin(res.user.name, res.user.email);
+      onClose();
+      setEmail("");
+      setPassword("");
+      router.push("/dashboard");
 
-    // Simulate sending verification code
-    await new Promise((r) => setTimeout(r, 1000));
-    
-    const code = generateVerificationCode();
-    setGeneratedCode(code);
-    
-    // In a real app, you would send this code via email
-    console.log(`Verification code sent to ${email}: ${code}`);
-    
-    setStep("verification");
-    setLoading(false);
-  };
-
-  const handleVerificationSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!verificationCode) {
-      setError("Please enter the verification code");
-      return;
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError("Something went wrong. Please try again.");
+      }
+      
+    } finally {
+      setLoading(false);
     }
-
-    if (verificationCode !== generatedCode) {
-      setError("Invalid verification code. Please try again.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    await new Promise((r) => setTimeout(r, 1000));
-
-    const name = email.split("@")[0].replace(".", " ").replace(/\b\w/g, (c) => c.toUpperCase());
-    onLogin(name, email);
-    setLoading(false);
-    onClose();
-    
-    // Reset states
-    setEmail("");
-    setPassword("");
-    setVerificationCode("");
-    setStep("login");
-    
-    router.push("/dashboard");
-  };
-
-  const handleBackToLogin = () => {
-    setStep("login");
-    setVerificationCode("");
-    setError("");
   };
 
   return (
@@ -137,22 +167,23 @@ export function LoginModal({ open, onClose, onLogin, onSwitchToSignup }: LoginMo
               </div>
               <h2 className="text-2xl font-black mb-1">Welcome Back</h2>
               <p className="text-blue-200 text-sm">
-                {step === "login" ? "Sign in with Gmail or college email" : "Verify your email address"}
+                {/* {step === "login" ? "Sign in with Gmail or college email" : "Verify your email address"} */}
+                Sign in with your college email.
               </p>
             </div>
 
             {/* Form */}
             <div className="p-8">
-              {step === "login" ? (
-                // Login Form
-                <form onSubmit={handleEmailSubmit} className="space-y-5">
+              {/* {step === "login" ? (
+                // Login Form */}
+                <form onSubmit={handleSubmit} className="space-y-5">
                   {error && (
                     <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
                       {error}
                     </div>
                   )}
 
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">Email Address</label>
                     <div className="relative">
                       <Mail size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -273,7 +304,69 @@ export function LoginModal({ open, onClose, onLogin, onSwitchToSignup }: LoginMo
                     Sign Up
                   </button>
                 </p>
-              )}
+              )} */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Email Address</label>
+                    <div className="relative">
+                      <Mail size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@pu.edu.np"
+                        className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+                    <div className="relative">
+                      <Lock size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type={showPass ? "text" : "password"}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Your password"
+                        className="w-full pl-10 pr-11 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPass(!showPass)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                      >
+                        {showPass ? <EyeOff size={17} /> : <Eye size={17} />}
+                      </button>
+                    </div>
+                  </div>
+                  {/* <div className="flex items-center justify-between text-sm">
+                    <label className="flex items-center gap-2 text-slate-600 cursor-pointer">
+                      <input type="checkbox" className="rounded accent-blue-600" />
+                      Remember me
+                    </label>
+                    <button type="button" className="text-blue-600 hover:underline font-medium">
+                      Forgot Password?
+                    </button>
+                  </div> */}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <>Continue <ArrowRight size={16} /></>
+                    )}
+                  </button>
+                </form>
+                <p className="text-center text-sm text-slate-500 mt-6">
+                  Don't have an account?{" "}
+                  <button onClick={onSwitchToSignup} className="text-blue-600 font-semibold hover:underline">
+                    Sign Up
+                  </button>
+                </p>
             </div>
           </motion.div>
         </div>

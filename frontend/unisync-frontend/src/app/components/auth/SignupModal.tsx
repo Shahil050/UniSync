@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Mail, Lock, Eye, EyeOff, User, Zap, ArrowRight, CheckCircle2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { X, Mail, Lock, Eye, EyeOff, User, Zap, ArrowRight, CheckCircle2, MailCheck } from "lucide-react";
+import { authApi } from "@/src/lib/api/auth";
+import { ApiError } from "next/dist/server/api-utils";
 
 type SignupModalProps = {
   open: boolean;
@@ -14,46 +15,97 @@ type SignupModalProps = {
 
 const FACULTIES = ["Computer Engineering", "Information Technology", "Software Engineering"];
 
-export function SignupModal({ open, onClose, onLogin, onSwitchToLogin }: SignupModalProps) {
+export function SignupModal({ open, onClose, onSwitchToLogin }: SignupModalProps) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ name: "", email: "", password: "", faculty: "" });
   const [showPass, setShowPass] = useState(false);
-  const [verificationSent, setVerificationSent] = useState(false);
+  // const [verificationSent, setVerificationSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
+  const [done, setDone] = useState(false);
+  // const router = useRouter();
 
-  const handleStep1 = async (e: React.FormEvent) => {
+  const handleStep1 = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.email) {
-      setError("Please enter your email");
+    setError("");
+
+    if (!form.email || !form.password) {
+      setError("Please enter your email and password.");
       return;
     }
+
     if (!form.email.endsWith("@gmail.com") && !form.email.endsWith("@eemc.edu.np")) {
-  setError("Please use Gmail or your college (@eemc.edu.np) email address.");
-  return;
-}
-    setLoading(true);
-    setError("");
-    await new Promise((r) => setTimeout(r, 1200));
-    setVerificationSent(true);
-    setLoading(false);
+      setError("Please use Gmail or your college (@eemc.edu.np) email address.");
+      return;
+    }
+
+    if (form.password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
+    // setLoading(true);
+    // setError("");
+    // await new Promise((r) => setTimeout(r, 1200));
+    // setVerificationSent(true);
+    // setLoading(false);
     setStep(2);
   };
 
   const handleStep2 = (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
+    if (!form.name || !form.faculty) {
+      setError("Please fill in your name and faculty.");
+      return;
+    }
+
     setStep(3);
   };
 
   const handleFinish = async () => {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    onLogin(form.name, form.email);
-    setLoading(false);
-    onClose();
-    router.push("/interests");
+    setError("");
+
+    try {
+      await authApi.signup({
+        fullName: form.name,
+        email: form.email,
+        password: form.password,
+        department: form.faculty,
+      });
+      setDone(true);
+
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+        setStep(1);
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+
+    } finally {
+      setLoading(false);
+    }
+    // await new Promise((r) => setTimeout(r, 1000));
+    // onLogin(form.name, form.email);
+    // setLoading(false);
+    // onClose();
+    // router.push("/interests");
   };
+
+  const handleClose = () => {
+    onClose();
+
+    // reset everything only after the modal has actually closed
+    setTimeout(() => {
+      setStep(1);
+      setForm({ name: "", email: "", password: "", faculty: "" });
+      setDone(false);
+      setError("");
+    }, 300);
+  }
 
   return (
     <AnimatePresence>
@@ -64,7 +116,7 @@ export function SignupModal({ open, onClose, onLogin, onSwitchToLogin }: SignupM
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 bg-blue-950/60 backdrop-blur-sm"
-            onClick={onClose}
+            onClick={handleClose}
           />
 
           <motion.div
@@ -77,7 +129,7 @@ export function SignupModal({ open, onClose, onLogin, onSwitchToLogin }: SignupM
             {/* Header */}
             <div className="bg-gradient-to-br from-blue-700 to-blue-900 p-7 text-white relative">
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="absolute top-4 right-4 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
               >
                 <X size={16} />
@@ -92,11 +144,11 @@ export function SignupModal({ open, onClose, onLogin, onSwitchToLogin }: SignupM
                 </div>
               </div>
               <h2 className="text-2xl font-black mb-1">Create Account</h2>
-              <p className="text-blue-200 text-sm">Step {step} of 3</p>
+              <p className="text-blue-200 text-sm">{done ? "Almost there" : `Step ${step} of 3`}</p>
               {/* Progress bar */}
               <div className="mt-3 h-1.5 bg-white/20 rounded-full overflow-hidden">
                 <motion.div
-                  animate={{ width: `${(step / 3) * 100}%` }}
+                  animate={{ width: `${(done ? 3 : step) / 3 * 100}%` }}
                   className="h-full bg-white rounded-full"
                   transition={{ duration: 0.4 }}
                 />
@@ -105,18 +157,46 @@ export function SignupModal({ open, onClose, onLogin, onSwitchToLogin }: SignupM
 
             <div className="p-8">
               {/* Step 1: Email + Password */}
-              {step === 1 && (
+              {error && (
+                <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm mb-5">
+                  {error}
+                </div>
+              )}
+
+              {done ? (
+                <div className="text-center space-y-5">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                    <MailCheck size={32} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-800 text-lg mb-1">Check your inbox</h3>
+                    <p className="text-slate-500 text-sm">
+                      We've sent a verification link to{" "}
+                      <span className="font-semibold text-blue-700">{form.email}</span>. Click it to activate your account, then sign in.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      handleClose();
+                      onSwitchToLogin();
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md"
+                  >
+                    Go to Sign In <ArrowRight size={16} />
+                  </button>
+                </div>
+              ) : step === 1 ? (
                 <form onSubmit={handleStep1} className="space-y-5">
                   <div>
                     <h3 className="font-bold text-slate-800 mb-1">Account Details</h3>
                     <p className="text-slate-500 text-sm">Enter your Gmail or college email to get started.</p>
                   </div>
 
-                  {error && (
+                  {/* {error && (
                     <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
                       {error}
                     </div>
-                  )}
+                  )} */}
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">Email Address</label>
@@ -127,7 +207,7 @@ export function SignupModal({ open, onClose, onLogin, onSwitchToLogin }: SignupM
                         required
                         value={form.email}
                         onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        placeholder="you@gmail.com"
+                        placeholder="you@pu.edu.com"
                         className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                       />
                     </div>
@@ -157,27 +237,25 @@ export function SignupModal({ open, onClose, onLogin, onSwitchToLogin }: SignupM
 
                   <button
                     type="submit"
-                    disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md disabled:opacity-60"
+                    // disabled={loading}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md"
                   >
-                    {loading ? (
+                    {/* {loading ? (
                       <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                     ) : (
                       <>Send Verification Email <ArrowRight size={16} /></>
-                    )}
+                    )} */}
+                    Continue <ArrowRight size={16} />
                   </button>
                 </form>
-              )}
-
-              {/* Step 2: Profile details */}
-              {step === 2 && (
+              ) : step === 2 ? (
                 <form onSubmit={handleStep2} className="space-y-5">
-                  {verificationSent && (
+                  {/* {verificationSent && (
                     <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
                       <CheckCircle2 size={16} />
                       Verification email sent to {form.email}
                     </div>
-                  )}
+                  )} */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">Full Name</label>
                     <div className="relative">
@@ -213,10 +291,7 @@ export function SignupModal({ open, onClose, onLogin, onSwitchToLogin }: SignupM
                     Continue <ArrowRight size={16} />
                   </button>
                 </form>
-              )}
-
-              {/* Step 3: Confirmation */}
-              {step === 3 && (
+              ) : (
                 <div className="text-center space-y-5">
                   <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
                     <CheckCircle2 size={32} className="text-blue-600" />
@@ -224,7 +299,7 @@ export function SignupModal({ open, onClose, onLogin, onSwitchToLogin }: SignupM
                   <div>
                     <h3 className="font-bold text-slate-800 text-lg mb-1">You're almost in!</h3>
                     <p className="text-slate-500 text-sm">
-                      Welcome, {form.name}! Next, select your interests to personalize your experience.
+                      Review your details below.
                     </p>
                   </div>
                   <div className="bg-blue-50 rounded-xl p-4 text-left border border-blue-100">
@@ -240,18 +315,20 @@ export function SignupModal({ open, onClose, onLogin, onSwitchToLogin }: SignupM
                     {loading ? (
                       <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                     ) : (
-                      <>Select Interests <ArrowRight size={16} /></>
+                      <>Create Account <ArrowRight size={16} /></>
                     )}
                   </button>
                 </div>
               )}
 
-              <p className="text-center text-sm text-slate-500 mt-6">
-                Already have an account?{" "}
-                <button onClick={onSwitchToLogin} className="text-blue-600 font-semibold hover:underline">
-                  Sign In
-                </button>
-              </p>
+              {!done && (
+                <p className="text-center text-sm text-slate-500 mt-6">
+                  Already have an account?{" "}
+                  <button onClick={onSwitchToLogin} className="text-blue-600 font-semibold hover:underline">
+                    Sign In
+                  </button>
+                </p>
+              )}
             </div>
           </motion.div>
         </div>

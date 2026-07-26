@@ -3,9 +3,11 @@ import { ActivityLogs } from "../components/dashboard/ActivityLogs";
 import { Footer } from "../components/Footer";
 import { User } from "lucide-react";
 import { motion } from "motion/react";
-import type { AppUser } from "../App";
+import { useUser } from "../UserContext";
 
-export function ProfilePage({ user }: { user: AppUser }) {
+export function ProfilePage() {
+  const { user } = useUser();
+  
   return (
     <div className="min-h-screen bg-blue-50/50 pt-16">
       {/* Header */}
