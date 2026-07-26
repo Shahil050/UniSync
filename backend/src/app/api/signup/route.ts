@@ -5,12 +5,12 @@ import { sendVerificationEmail } from "@/lib/email";
 import { Prisma } from "@/generated/prisma/client";
 
 export async function POST(req: NextRequest) {
-  const { fullName, email, password } = await req.json();
+  const { fullName, email, password, department } = await req.json();
 
   // Basic validation
-  if (!fullName || !email || !password) {
+  if (!fullName || !email || !password || !department) {
     return NextResponse.json(
-      { success: false, message: "fullName, email and password are required." },
+      { success: false, message: "fullName, email, password and department are required." },
       { status: 400 }
     );
   }
@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
 
   // Create user + verification token atomically
   const passwordHash = await bcrypt.hash(password, 12);
+  const trimmedDepartment = typeof department === "string" ? department.trim() || null : null;
 
   let user, token;
   try {
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
           email: normalizedEmail,
           passwordHash,
           institutionId: institution.id,
+          department: trimmedDepartment,
         },
       });
 
@@ -89,8 +91,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message:
-          "Account created, but we couldn't send the verification email. Please use 'resend verification' to try again.",
+        message: "Account created, but we couldn't send the verification email. Please use 'resend verification' to try again.",
         emailFailed: true,
       },
       { status: 201 }

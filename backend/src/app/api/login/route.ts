@@ -4,6 +4,8 @@ import { encode } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 import { SESSION_COOKIE_NAME, SESSION_MAX_AGE } from "@/auth";
 
+const isProd = process.env.NODE_ENV === "production";
+
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json();
 
@@ -65,8 +67,8 @@ export async function POST(req: NextRequest) {
 
   response.cookies.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
     path: "/",
     maxAge: SESSION_MAX_AGE,
   });

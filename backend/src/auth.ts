@@ -4,11 +4,12 @@ import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
+const isProd = process.env.NODE_ENV === "production";
+
 export const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
-export const SESSION_COOKIE_NAME =
-  process.env.NODE_ENV === "production"
-    ? "__Secure-authjs.session-token"
-    : "authjs.session-token";
+export const SESSION_COOKIE_NAME = isProd
+  ? "__Secure-authjs.session-token"
+  : "authjs.session-token";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // adapter: PrismaAdapter(prisma),
@@ -18,9 +19,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       name: SESSION_COOKIE_NAME,
       options: {
         httpOnly: true,
-        sameSite: "lax",
+        sameSite: isProd ? "none" : "lax",
+        secure: isProd,
         path: "/",
-        secure: process.env.NODE_ENV === "production",
       },
     },
   },
