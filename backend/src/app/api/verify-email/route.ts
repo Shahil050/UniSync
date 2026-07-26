@@ -1,14 +1,13 @@
+// src/app/api/verify-email/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
+  const frontendUrl = process.env.FRONTEND_URL!;
 
   if (!token) {
-    return NextResponse.json(
-      { success: false, message: "Token is required." },
-      { status: 400 }
-    );
+    return NextResponse.redirect(`${frontendUrl}/?verifyError=missing-token`);
   }
 
   const record = await prisma.emailVerificationToken.findUnique({
@@ -16,22 +15,14 @@ export async function GET(req: NextRequest) {
   });
 
   if (!record) {
-    return NextResponse.json(
-      { success: false, message: "Invalid or already used verification link." },
-      { status: 400 }
-    );
+    return NextResponse.redirect(`${frontendUrl}/?verifyError=invalid`);
   }
 
   if (record.expiresAt < new Date()) {
-    // Clean up the expired token so the user can request a fresh one
     await prisma.emailVerificationToken.delete({ where: { token } });
-    return NextResponse.json(
-      { success: false, message: "Verification link has expired. Please request a new one." },
-      { status: 410 }
-    );
+    return NextResponse.redirect(`${frontendUrl}/?verifyError=expired`);
   }
 
-  // Mark verified and delete the token in one transaction
   await prisma.$transaction([
     prisma.user.update({
       where: { id: record.userId },
@@ -40,6 +31,5 @@ export async function GET(req: NextRequest) {
     prisma.emailVerificationToken.delete({ where: { token } }),
   ]);
 
-  // Redirect to login page with a success flag the UI can read
-  return NextResponse.redirect(new URL("/auth/login?verified=true", req.url));
+  return NextResponse.redirect(`${frontendUrl}/?verified=true`);
 }

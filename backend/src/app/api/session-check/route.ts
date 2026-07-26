@@ -1,8 +1,8 @@
-import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 
-export async function GET() {
-  const session = await auth();
+export const GET = auth(function GET(req) {
+  const session = req.auth;
 
   if (!session?.user) {
     return NextResponse.json(
@@ -19,4 +19,4 @@ export async function GET() {
       email: session.user.email,
     },
   });
-}
+});

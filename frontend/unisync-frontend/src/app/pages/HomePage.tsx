@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { HeroSection } from "../components/home/HeroSection";
 import { HowItWorksSection } from "../components/home/HowItWorksSection";
 import { FeatureHighlights } from "../components/home/FeatureHighlights";
@@ -10,6 +12,14 @@ import { useUser } from "../UserContext";
 
 export function HomePage() {
   const { openLogin, openSignup } = useUser();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("verified") === "true") {
+      openLogin();
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, openLogin, setSearchParams]);
 
   return (
     <>
