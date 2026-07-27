@@ -6,7 +6,6 @@ import { Prisma } from "@/generated/prisma/client";
 
 export async function POST(req: NextRequest) {
   const { fullName, email, password, department } = await req.json();
-  console.log(email);
 
   // Basic validation
   if (!fullName || !email || !password || !department) {
