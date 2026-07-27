@@ -1,8 +1,7 @@
-from profile import UserProfile, profile_to_text
+from user_profile.UserProfile import UserProfile
 from fastapi import APIRouter, HTTPException
 from RAG_pipeline.embeddings import get_embeddings
-
-
+from RAG_pipeline.vector_store import add_user_to_fiass
 
 
 router=APIRouter()
@@ -10,9 +9,15 @@ router=APIRouter()
 
 @router.post("/users/register")
 async def register_user(profile: UserProfile):
-    text_repr=profile_to_text(profile.interest)
     model=get_embeddings()
-    embeddings=model.encode(text_repr,convert_to_tensor=True)
+    added_user=add_user_to_fiass(profile.user_id,profile.interest,embeddings=model)
+    return {
+        "status": "success",
+        "message": f"User {profile.user_id} successfully added to FAISS vector index.",
+        "user_id": profile.user_id
+    }
+    # not reaching to return statement.
+
     
 
 

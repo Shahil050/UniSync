@@ -1,5 +1,5 @@
 import os
-from documents import create_documents
+from RAG_pipeline.documents import create_documents
 from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
 
@@ -70,14 +70,14 @@ def similarity_search_with_score(query, embeddings, path="faiss_index", k=4):
     return results
 
 
-def add_pdf_to_fiass(pdf_id:str, chunks:list[str],embeddings,path="faiss_index")
+def add_pdf_to_fiass(pdf_id:str, chunks:list[str],embeddings,path="faiss_index"):
     documents=create_documents(chunks=chunks,pdf_id=pdf_id)
     return save_or_update_vector_index(documents,embeddings,path=path)
 
 def add_user_to_fiass(user_id:str,interest:list[str],embeddings,path="fiass_index"):
     documents=f"interest:{', '.join(interest)}"
     user_doc=Document(
-        page_content=interest_text,
+        page_content=documents,
         metadata={
             "doc_type":"user",
             "user_id":user_id
@@ -85,7 +85,8 @@ def add_user_to_fiass(user_id:str,interest:list[str],embeddings,path="fiass_inde
     )
     return save_or_update_vector_index([user_doc],embeddings,path=path)
 
-def get_recommendations_for_user(user_id:str, embeddings,path="faiss_index",k:int=5):
+## error
+def get_similar_user_recommenda(user_id:str, embeddings,path="faiss_index",k:int=5):
     vectorstore=load_vector_index(embeddings,path=path)
     if not vectorstore:
         return []
@@ -150,4 +151,62 @@ def get_recommendations_for_pdf(pdf_id: str, embeddings, path="faiss_index", k: 
                 break
 
     return recommended_user_ids
+
+
+def get_similar_user_recommendations(user_id: str, embeddings, path="faiss_index", k: int = 5):
+    """
+    Finds top 'k' users with interests similar to the given target user_id.
+    """
+    # 1. Load vector store from disk
+    try:
+        vectorstore = FAISS.load_local(
+            folder_path=path,
+            embeddings=embeddings,
+            allow_dangerous_deserialization=True
+        )
+    except Exception as e:
+        print(f"Error loading vector store from {path}: {e}")
+        return []
+
+    # 2. Extract all stored documents from memory
+    all_docs = list(vectorstore.docstore._dict.values())
+    
+    # 3. Locate the target user's document
+    target_user_doc = next(
+        (d for d in all_docs if d.metadata.get("user_id") == user_id), 
+        None
+    )
+
+    if not target_user_doc:
+        print(f"User '{user_id}' not found in vector store.")
+        return []
+
+    # 4. Search for similar entries
+    # Request extra candidates (k + 5) to account for filtering out self/duplicates
+    results = vectorstore.similarity_search_with_relevance_scores(
+        query=target_user_doc.page_content,
+        k=k + 5,
+        filter={"doc_type": "user_profile"}  # Filter specifically for user profiles
+    )
+
+    recommended_users = []
+    seen_users = {user_id}  # Add target user_id so they don't recommend themselves
+
+    # 5. Filter unique candidate user IDs
+    for doc, score in results:
+        candidate_id = doc.metadata.get("user_id")
+        
+        # Ensure ID exists, hasn't been seen yet, and isn't the target user
+        if candidate_id and candidate_id not in seen_users:
+            seen_users.add(candidate_id)
+            recommended_users.append({
+                "user_id": candidate_id,
+                "similarity_score": round(float(score), 4),
+                "interests": doc.page_content
+            })
+            
+            if len(recommended_users) == k:
+                break
+
+    return recommended_users
 
