@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Sparkles, Users, Star, BookOpen } from "lucide-react";
 
@@ -94,7 +94,7 @@ export function HeroSection({ onLoginClick, onSignupClick }: HeroProps) {
               Sign In
             </button>
             <Link
-              to="/features"
+              href="/features"
               className="flex items-center gap-2 px-7 py-3.5 text-blue-300 hover:text-white text-sm font-medium transition-colors underline-offset-4 hover:underline"
             >
               Explore Features →

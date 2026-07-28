@@ -9,5 +9,5 @@ export const authApi = {
 
   logout: () => api.post("/api/logout"),
 
-  me: () => api.get("/api/me"),
+  me: () => api.get("/api/session-check"),
 };
