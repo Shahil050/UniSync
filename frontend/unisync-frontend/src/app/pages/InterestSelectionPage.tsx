@@ -1,87 +1,90 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { useRouter } from "next/navigation";
 import { Check, Plus, ArrowRight, Sparkles } from "lucide-react";
 import { Footer } from "../components/Footer";
+import { usersApi } from "@/src/lib/api/users";
+import { ApiError } from "@/src/lib/api-client";
 
-const INTEREST_CATEGORIES = [
-  {
-    category: "Artificial Intelligence",
-    color: "blue",
-    items: ["Machine Learning", "Deep Learning", "NLP", "Computer Vision", "Reinforcement Learning"],
-  },
-  {
-    category: "Software Engineering",
-    color: "sky",
-    items: ["Web Development", "Mobile Apps", "DevOps", "System Design", "API Development"],
-  },
-  {
-    category: "Computer Networks",
-    color: "blue",
-    items: ["Network Security", "Protocols", "Distributed Systems", "Cloud Computing", "IoT"],
-  },
-  {
-    category: "Cybersecurity",
-    color: "cyan",
-    items: ["Ethical Hacking", "Cryptography", "Malware Analysis", "Penetration Testing", "Forensics"],
-  },
-  {
-    category: "Data Science",
-    color: "blue",
-    items: ["Data Analysis", "Visualization", "Big Data", "Statistics", "Business Intelligence"],
-  },
-  {
-    category: "Research",
-    color: "sky",
-    items: ["Academic Writing", "Open Source", "Robotics", "Blockchain", "AR/VR"],
-  },
-];
+type Skill = { id: string; name: string; type: string; category: string | null };
 
-const colorMap: Record<string, { bg: string; selected: string; border: string; tag: string }> = {
+const colorCycle = ["blue", "sky", "cyan"] as const;
+
+const colorMap: Record<string, { bg: string; selected: string; border: string }> = {
   blue: {
     bg: "hover:bg-blue-50",
     selected: "bg-blue-600 text-white border-blue-600",
     border: "border-blue-200",
-    tag: "bg-blue-100 text-blue-700",
   },
   sky: {
     bg: "hover:bg-sky-50",
     selected: "bg-sky-600 text-white border-sky-600",
     border: "border-sky-200",
-    tag: "bg-sky-100 text-sky-700",
   },
   cyan: {
     bg: "hover:bg-cyan-50",
     selected: "bg-cyan-600 text-white border-cyan-600",
     border: "border-cyan-200",
-    tag: "bg-cyan-100 text-cyan-700",
   },
 };
 
 export function InterestSelectionPage() {
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [custom, setCustom] = useState("");
-  const [customList, setCustomList] = useState<string[]>([]);
+  const searchParams = useSearchParams();
+  const justVerified = searchParams.get("justVerified") === "true";
   const router = useRouter();
 
-  const toggle = (item: string) => {
+  const [categories, setCategories] = useState<{ category: string; items: Skill[] }[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    usersApi
+      .listSkills()
+      .then((res) => {
+        const grouped = new Map<string, Skill[]>();
+        for (const skill of res.skills as Skill[]) {
+          const cat = skill.category ?? "Other";
+          if (!grouped.has(cat)) grouped.set(cat, []);
+          grouped.get(cat)!.push(skill);
+        }
+        setCategories([...grouped.entries()].map(([category, items]) => ({ category, items })));
+      })
+      .catch((err) => {
+        setError(err instanceof ApiError ? err.message : "Could not load interests.");
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const toggle = (id: string) => {
     const next = new Set(selected);
-    if (next.has(item)) next.delete(item);
-    else next.add(item);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
     setSelected(next);
   };
 
-  const addCustom = () => {
-    if (custom.trim() && !customList.includes(custom.trim())) {
-      setCustomList([...customList, custom.trim()]);
-      setSelected(new Set([...selected, custom.trim()]));
-      setCustom("");
+  // const addCustom = () => {
+  //   if (custom.trim() && !customList.includes(custom.trim())) {
+  //     setCustomList([...customList, custom.trim()]);
+  //     setSelected(new Set([...selected, custom.trim()]));
+  //     setCustom("");
+  //   }
+  // };
+
+  const handleFinish = async () => {
+    setSubmitting(true);
+    setError("");
+    try {
+      await usersApi.setSkills([...selected].map((skillId) => ({ skillId })));
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not save your interests.");
+      setSubmitting(false);
     }
   };
-
-  const handleFinish = () => router.push("/dashboard");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white pt-20">
@@ -103,6 +106,27 @@ export function InterestSelectionPage() {
           </p>
         </motion.div>
 
+        {justVerified && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 px-5 py-4 bg-green-50 border border-green-200 rounded-2xl text-center"
+          >
+            <p className="text-green-700 font-semibold text-sm">
+             Your email is verified! Let's set up your profile.
+            </p>
+            <p className="text-green-700 font-semibold text-sm">
+             Choose your interests to get started.
+            </p>
+          </motion.div>
+        )}
+
+        {error && (
+          <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm text-center">
+            {error}
+          </div>
+        )}
+
         {/* Selected count badge */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -112,7 +136,7 @@ export function InterestSelectionPage() {
           <div className="px-5 py-2 bg-blue-600 text-white rounded-full font-bold text-sm shadow-md">
             {selected.size} selected
           </div>
-          {selected.size > 0 && (
+          {/* {selected.size > 0 && (
             <div className="flex flex-wrap gap-2 max-w-lg">
               {[...selected].slice(0, 5).map((s) => (
                 <span key={s} className="px-3 py-1 bg-white border border-blue-200 rounded-full text-xs text-blue-700 font-medium shadow-sm">
@@ -125,47 +149,52 @@ export function InterestSelectionPage() {
                 </span>
               )}
             </div>
-          )}
+          )} */}
         </motion.div>
 
         {/* Interest categories */}
-        <div className="space-y-8">
-          {INTEREST_CATEGORIES.map((cat, ci) => {
-            const colors = colorMap[cat.color];
-            return (
-              <motion.div
-                key={cat.category}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: ci * 0.1 }}
-                className="bg-white rounded-2xl shadow-sm border border-blue-100 p-6"
-              >
-                <h3 className="font-bold text-slate-700 mb-4 text-base">{cat.category}</h3>
-                <div className="flex flex-wrap gap-3">
-                  {cat.items.map((item) => {
-                    const isSelected = selected.has(item);
-                    return (
-                      <button
-                        key={item}
-                        onClick={() => toggle(item)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
-                          isSelected
-                            ? colors.selected
-                            : `bg-white ${colors.border} text-slate-600 ${colors.bg}`
-                        }`}
-                      >
-                        {isSelected && <Check size={14} />}
-                        {item}
-                      </button>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            );
-          })}
+        {loading ? (
+          <p className="text-center text-slate-400">Loading interests...</p>
+        ) : (
+          <div className="space-y-8">
+            {categories.map((cat, ci) => {
+              const colors = colorMap[colorCycle[ci % colorCycle.length]];
+              return (
+                <motion.div
+                  key={cat.category}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: ci * 0.1 }}
+                  className="bg-white rounded-2xl shadow-sm border border-blue-100 p-6"
+                >
+                  <h3 className="font-bold text-slate-700 mb-4 text-base">{cat.category}</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {cat.items.map((skill) => {
+                      const isSelected = selected.has(skill.id);
+                      return (
+                        <button
+                          key={skill.id}
+                          onClick={() => toggle(skill.id)}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
+                            isSelected
+                              ? colors.selected
+                              : `bg-white ${colors.border} text-slate-600 ${colors.bg}`
+                          }`}
+                        >
+                          {isSelected && <Check size={14} />}
+                          {skill.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
           {/* Custom interests */}
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
@@ -199,22 +228,22 @@ export function InterestSelectionPage() {
                 ))}
               </div>
             )}
-          </motion.div>
-        </div>
+          </motion.div> 
+        </div> */}
 
         {/* Continue button */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 0.3 }}
           className="flex flex-col items-center mt-10 gap-3"
         >
           <button
             onClick={handleFinish}
-            disabled={selected.size === 0}
+            disabled={selected.size === 0 || submitting}
             className="flex items-center gap-3 px-10 py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0"
           >
-            Continue to Dashboard
+            {submitting ? "Saving..." : "Continue to Dashboard"}
             <ArrowRight size={20} />
           </button>
           <p className="text-slate-400 text-sm">
