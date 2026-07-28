@@ -43,4 +43,9 @@ next-env.d.ts
 
 /src/generated/prisma
 
+# seed files
 /seed.ts
+/prisma/seed-badges.ts
+
+# prisma migrations
+/prisma/migrations

@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
-import { X, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { X, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { authApi } from "@/src/lib/api/auth";
 import { ApiError } from "@/src/lib/api-client";
 
@@ -43,9 +43,7 @@ export function LoginModal({ open, onClose, onLogin, onSwitchToSignup }: LoginMo
       router.push("/dashboard");
 
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError("Something went wrong. Please try again.");
-      }
+      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
       
     } finally {
       setLoading(false);

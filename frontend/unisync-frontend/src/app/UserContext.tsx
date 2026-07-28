@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { authApi } from "@/src/lib/api/auth";
 
 export type AppUser = {
   id: string;
@@ -12,6 +13,7 @@ export type AppUser = {
 
 type UserContextType = {
   user: AppUser;
+  checkingSession: boolean;
   onLogin: (id: string, name: string, email: string) => void;
   onLogout: () => void;
   loginOpen: boolean;
@@ -23,17 +25,37 @@ type UserContextType = {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=80&h=80&fit=crop&crop=face";
+
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser>({
     id: "",
     name: "",
     email: "",
-    avatar: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=80&h=80&fit=crop&crop=face",
+    avatar: DEFAULT_AVATAR,
     isLoggedIn: false,
   });
+  const [checkingSession, setCheckingSession] = useState(true);
 
   const [loginOpen, setLoginOpen] = useState(false);
   const [signupOpen, setSignupOpen] = useState(false);
+
+  useEffect(() => {
+    authApi
+      .me()
+      .then((res) => {
+        setUser({
+          id: res.user.id,
+          name: res.user.name,
+          email: res.user.email,
+          avatar: DEFAULT_AVATAR,
+          isLoggedIn: true,
+        });
+      })
+      .catch(() => {
+      })
+      .finally(() => setCheckingSession(false));
+  }, []);
 
   const onLogin = (id: string, name: string, email: string) => {
     setUser((u) => ({ id, name, email, avatar: u.avatar, isLoggedIn: true }));
@@ -60,7 +82,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   return (
     <UserContext.Provider
-      value={{ user, onLogin, onLogout, loginOpen, signupOpen, openLogin, openSignup, closeModals }}
+      value={{
+        user,
+        checkingSession,
+        onLogin,
+        onLogout,
+        loginOpen,
+        signupOpen,
+        openLogin,
+        openSignup,
+        closeModals,
+      }}
     >
       {children}
     </UserContext.Provider>

@@ -1,5 +1,10 @@
 import { DashboardPage } from "../pages/DashboardPage";
+import { ProtectedRoute } from "../components/ProtectedRoute";
 
 export default function Page() {
-  return <DashboardPage />;
+  return (
+    <ProtectedRoute>
+      <DashboardPage />
+    </ProtectedRoute>
+  );
 }
