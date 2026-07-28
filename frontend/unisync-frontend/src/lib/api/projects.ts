@@ -36,6 +36,17 @@ export const projectsApi = {
   removeMember: (projectId: string, userId: string) =>
     api.delete(`/api/projects/${projectId}/members/${userId}`),
 
+  updateLinks: (projectId: string, data: { githubUrl?: string | null; boardUrl?: string | null; docsUrl?: string | null }) =>
+    api.patch(`/api/projects/${projectId}/links`, data),
+
+  listResources: (projectId: string) => api.get(`/api/projects/${projectId}/resources`),
+
+  addResource: (projectId: string, data: { title: string; type: string; url: string }) =>
+    api.post(`/api/projects/${projectId}/resources`, data),
+
+  removeResource: (projectId: string, resourceId: string) =>
+    api.delete(`/api/projects/${projectId}/resources/${resourceId}`),
+
   // Contract
   getContract: (projectId: string) => api.get(`/api/projects/${projectId}/contract`),
 
