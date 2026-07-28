@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
 export type AppUser = {
+  id: string;
   name: string;
   email: string;
   avatar: string;
@@ -11,7 +12,7 @@ export type AppUser = {
 
 type UserContextType = {
   user: AppUser;
-  onLogin: (name: string, email: string) => void;
+  onLogin: (id: string, name: string, email: string) => void;
   onLogout: () => void;
   loginOpen: boolean;
   signupOpen: boolean;
@@ -24,18 +25,18 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser>({
-    name: "Aarav Sharma",
-    email: "aarav.sharma@pu.edu.np",
-    avatar:
-      "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=80&h=80&fit=crop&crop=face",
+    id: "",
+    name: "",
+    email: "",
+    avatar: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=80&h=80&fit=crop&crop=face",
     isLoggedIn: false,
   });
 
   const [loginOpen, setLoginOpen] = useState(false);
   const [signupOpen, setSignupOpen] = useState(false);
 
-  const onLogin = (name: string, email: string) => {
-    setUser({ name, email, avatar: user.avatar, isLoggedIn: true });
+  const onLogin = (id: string, name: string, email: string) => {
+    setUser((u) => ({ id, name, email, avatar: u.avatar, isLoggedIn: true }));
   };
 
   const onLogout = () => {

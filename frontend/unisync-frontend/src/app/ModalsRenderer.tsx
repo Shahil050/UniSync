@@ -18,7 +18,6 @@ export function ModalsRenderer() {
       <SignupModal
         open={signupOpen}
         onClose={closeModals}
-        onLogin={onLogin}
         onSwitchToLogin={openLogin}
       />
     </>
