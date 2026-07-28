@@ -32,7 +32,8 @@ services:
       - ./backend/.env
     environment:
       - PORT=8000
-      - DATABASE_URL=postgresql://unisync_user:unisync_password@postgres:5432/unisync_db
+      #- DATABASE_URL=postgresql://unisync_user:unisync_password@postgres:5432/unisync_db
+      - DATABASE_URL=postgresql://neondb_owner:npg_QOgS1ozwY0Tf@ep-summer-grass-aoso6utw-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       - AI_SERVICE_URL=http://ai-service:5000
 
     #restart: unless-stopped
