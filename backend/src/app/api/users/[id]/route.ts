@@ -32,6 +32,13 @@ export const GET = auth(async function GET(req, { params }) {
           skill: { select: { id: true, name: true, type: true, category: true } },
         },
       },
+      badges: {
+        select: {
+          projectId: true,
+          awardedAt: true,
+          badge: { select: { id: true, name: true, description: true, iconUrl: true } },
+        },
+      },
     },
   });
 

@@ -133,8 +133,11 @@ export const GET = auth(async function GET(req) {
     where,
     orderBy: { createdAt: "desc" },
     include: {
+      owner: {
+        select: { id: true, fullName: true, profileImage: true },
+      },
       members: {
-        select: { userId: true, role: true, status: true },
+        select: { userId: true, role: true, status: true, user: { select: { fullName: true } } },
       },
     },
   });
