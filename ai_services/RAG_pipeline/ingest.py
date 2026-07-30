@@ -42,7 +42,7 @@ def ingest(pdf_path: str, paper_id: str):
     
     print("Creating Documents ....")
     # Pass paper_id as the source name so your search knows which DB record it maps to
-    documents = create_documents(chunks, source_name=paper_id)
+    documents = create_documents(chunks, pdf_id=paper_id)
 
     print("Generating embeddings + Syncing with FAISS index ...")
     embeddings = get_embeddings()
