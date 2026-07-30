@@ -18,14 +18,16 @@ export const POST = auth(async function POST(req, { params }) {
   const outcome = await prisma.$transaction(async (tx) => {
     const contract = await tx.contract.findUnique({
       where: { projectId },
-      select: { id: true, status: true },
+      select: { id: true, status: true, dueDate: true },
     });
     if (!contract) return { status: 404 as const, message: "Contract not found." };
 
-    // DRAFT = normal signing; ACTIVE = late-joiner addendum signature.
-    // COMPLETED/BREACHED are genuinely terminal — no signing either way.
     if (contract.status === "COMPLETED" || contract.status === "BREACHED") {
       return { status: 409 as const, message: `Contract is ${contract.status.toLowerCase()}, can't sign.` };
+    }
+
+    if (!contract.dueDate) {
+      return { status: 409 as const, message: "The project owner must set a deadline before this agreement can be signed." };
     }
 
     const role = await tx.contractRole.findUnique({
@@ -46,8 +48,6 @@ export const POST = auth(async function POST(req, { params }) {
       data: { contractId: contract.id, userId },
     });
 
-    // Only run the auto-activation check if we're still in DRAFT.
-    // If already ACTIVE, this is just an addendum signature — no re-trigger needed.
     let activated = false;
     if (contract.status === "DRAFT") {
       const [roleCount, signatureCount] = await Promise.all([

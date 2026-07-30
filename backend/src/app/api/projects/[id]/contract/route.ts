@@ -42,6 +42,7 @@ export const GET = auth(async function GET(req, { params }) {
   return NextResponse.json({ success: true, contract });
 });
 
+// src/app/api/projects/[id]/contract/route.ts — PATCH handler only, GET stays as-is
 export const PATCH = auth(async function PATCH(req, { params }) {
   if (!req.auth?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -55,9 +56,17 @@ export const PATCH = auth(async function PATCH(req, { params }) {
   const { data: body, error } = await parseJson(req);
   if (error) return error;
 
-  const { summary } = body;
+  const { summary, penalties, dueDate } = body;
   if (typeof summary !== "string" || summary.trim().length === 0) {
     return NextResponse.json({ success: false, message: "summary is required." }, { status: 400 });
+  }
+
+  if (!dueDate) {
+    return NextResponse.json({ success: false, message: "dueDate is required." }, { status: 400 });
+  }
+  const parsedDueDate = new Date(dueDate);
+  if (isNaN(parsedDueDate.getTime())) {
+    return NextResponse.json({ success: false, message: "dueDate is not a valid date." }, { status: 400 });
   }
 
   const userId = req.auth.user.id;
@@ -87,7 +96,13 @@ export const PATCH = auth(async function PATCH(req, { params }) {
 
     const updated = await tx.contract.update({
       where: { projectId },
-      data: { content: { summary: summary.trim() } },
+      data: {
+        content: {
+          summary: summary.trim(),
+          penalties: typeof penalties === "string" ? penalties.trim() : "",
+        },
+        dueDate: parsedDueDate,
+      },
     });
 
     return { status: 200 as const, contract: updated };

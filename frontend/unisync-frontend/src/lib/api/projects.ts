@@ -50,8 +50,8 @@ export const projectsApi = {
   // Contract
   getContract: (projectId: string) => api.get(`/api/projects/${projectId}/contract`),
 
-  updateContractContent: (projectId: string, summary: string) =>
-    api.patch(`/api/projects/${projectId}/contract`, { summary }),
+  updateContractContent: (projectId: string, data: { summary: string; penalties?: string; dueDate?: string | null } ) =>
+    api.patch(`/api/projects/${projectId}/contract`, data),
 
   updateContractRole: (
     projectId: string,

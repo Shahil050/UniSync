@@ -308,6 +308,7 @@ model Contract {
   projectId   String         @unique @db.Uuid
   content     Json
   status      ContractStatus @default(DRAFT)
+  dueDate     DateTime?
   createdAt   DateTime       @default(now())
   finalizedAt DateTime?
   deletedAt   DateTime?
