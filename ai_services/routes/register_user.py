@@ -7,7 +7,7 @@ from RAG_pipeline.vector_store import add_user_to_fiass
 router=APIRouter()
 
 
-@router.post("/users/register")
+@router.post("/register_user")
 async def register_user(profile: UserProfile):
     model=get_embeddings()
     added_user=add_user_to_fiass(profile.user_id,profile.interest,embeddings=model)
@@ -18,7 +18,8 @@ async def register_user(profile: UserProfile):
     }
     # not reaching to return statement.
 
-    
+
+
 
 
 

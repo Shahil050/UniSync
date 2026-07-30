@@ -4,10 +4,7 @@ router=APIRouter()
 
 @router.get("/recommend")
 async def recommend_papers(query: str):
-    """
-    Takes a search string from Node.js, scans the accumulated FAISS index,
-    and returns the top 5 Postgres IDs.
-    """
+
     if not query.strip():
         raise HTTPException(status_code=400, detail="Search query cannot be empty.")
         

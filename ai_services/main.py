@@ -1,10 +1,10 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-# from routes.name_op import router 
-# from routes.pdf_op import router as get_pdf
+
 from routes.recommend_paper import router as recommend_paper
-from routes.pdf_op import router as get_pdf
+from routes.get_pdf import router as get_pdf
 from routes.register_user import router as register_user
+from routes.recommend_user import router as recommend_user
 
 app=FastAPI()
 
@@ -16,8 +16,10 @@ app.add_middleware(
 )
 
 app.include_router(recommend_paper,prefix="/recommend_paper")
-app.include_router(get_pdf,prefix="/get_pdf")
-app.include_router(register_user,prefix="/register_user")
+app.include_router(get_pdf)
+app.include_router(register_user)
+app.include_router(recommend_user)
+
 
 
 

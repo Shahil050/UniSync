@@ -1,6 +1,6 @@
 from collections import Counter
 from RAG_pipeline.embeddings import get_embeddings
-from RAG_pipeline.vector_store import save_or_update_vector_index, load_vector_index, similarity_search_with_score
+from RAG_pipeline.vector_store import load_vector_index
 
 PAPERS_INDEX_PATH = "faiss_papers_index"
 

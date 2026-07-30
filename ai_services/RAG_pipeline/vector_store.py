@@ -85,37 +85,6 @@ def add_user_to_fiass(user_id:str,interest:list[str],embeddings,path="fiass_inde
     )
     return save_or_update_vector_index([user_doc],embeddings,path=path)
 
-## error
-def get_similar_user_recommenda(user_id:str, embeddings,path="faiss_index",k:int=5):
-    vectorstore=load_vector_index(embeddings,path=path)
-    if not vectorstore:
-        return []
-    
-    all_docs=list(vectorstore.docstore._dict.values())
-    target_user_doc=next((d for d in all_docs if d.metadata.get("user_id")==user_id),None)
-
-    if not target_user_doc:
-        return []
-    
-    results=vectorstore.similarity_search_with_relevance_scores(
-        query=target_user_doc.page_content,
-        k=k*4,
-        filter={"doc_type":"pdf"}
-    )
-    recommended_pdf_ids=[]
-    seen=set()
-    for doc, _ in results:
-        p_id=doc.metadata.get("pdf_id")
-        if p_id and p_id not in seen:
-            seen.add(p_id)
-            recommended_pdf_ids.append(p_id)
-            if len(recommended_pdf_ids)==k:
-                break
-
-    return recommended_pdf_ids
-
-
-
 def get_recommendations_for_pdf(pdf_id: str, embeddings, path="faiss_index", k: int = 5):
     """
     Looks up a PDF's vector in FAISS and finds interested User IDs.
@@ -153,7 +122,7 @@ def get_recommendations_for_pdf(pdf_id: str, embeddings, path="faiss_index", k: 
     return recommended_user_ids
 
 
-def get_similar_user_recommendations(user_id: str, embeddings, path="faiss_index", k: int = 5):
+def get_similar_user_recommendations(user_id: str, embeddings, path="fiass_index", k: int = 5):
     """
     Finds top 'k' users with interests similar to the given target user_id.
     """
@@ -186,7 +155,7 @@ def get_similar_user_recommendations(user_id: str, embeddings, path="faiss_index
     results = vectorstore.similarity_search_with_relevance_scores(
         query=target_user_doc.page_content,
         k=k + 5,
-        filter={"doc_type": "user_profile"}  # Filter specifically for user profiles
+        filter={"doc_type": "user"}  # Filter specifically for user profiles
     )
 
     recommended_users = []

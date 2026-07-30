@@ -2,6 +2,7 @@ import os
 import shutil
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from RAG_pipeline.ingest import ingest
+#
 
 router = APIRouter()
 
@@ -13,11 +14,7 @@ async def enter_pdf(
     postgres_id: str = Form(..., description="The unique database UUID/ID for this research paper."), 
     file: UploadFile = File(..., description="The research paper PDF file to parse and index.")
 ):
-    """
-    Accepts a PDF file and its unique PostgreSQL database ID.
-    Parses the text chunks, generates embeddings, and saves/appends them 
-    into the persistent FAISS vector store.
-    """
+
     # Validate file extension
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only standard PDF documents (.pdf) are supported.")
