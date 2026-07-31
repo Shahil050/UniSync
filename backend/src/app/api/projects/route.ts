@@ -82,6 +82,7 @@ export const GET = auth(async function GET(req) {
   const mine = searchParams.get("mine") === "true";
   const userIdParam = searchParams.get("userId");
   const statusParam = searchParams.get("status");
+  const search = searchParams.get("search");
 
   // Validate status up front, regardless of which branch uses it
   let status: string | undefined;
@@ -110,6 +111,10 @@ export const GET = auth(async function GET(req) {
       where: { id: userIdParam, deletedAt: null },
       select: { id: true },
     });
+
+    if (search) {
+      where.title = { contains: search, mode: "insensitive" };
+    }
 
     if (!targetUser) {
       return NextResponse.json(
