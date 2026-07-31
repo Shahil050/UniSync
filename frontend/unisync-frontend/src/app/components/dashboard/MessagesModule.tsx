@@ -7,6 +7,7 @@ import {
   Plus, Download, Camera,
   User,
 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import type { AppUser } from "../../UserContext";
 import { messagesApi } from "@/src/lib/api/messages";
 import { projectsApi } from "@/src/lib/api/projects";
@@ -140,7 +141,37 @@ export function MessagesModule({ user }: { user: AppUser }) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  const searchParams = useSearchParams();
+  const dmTargetId = searchParams.get("dm");
+
   const isOwner = !!projectDetail && projectDetail.ownerId === user.id;
+
+  // runs once conversations have loaded, handles the deep link
+  useEffect(() => {
+    if (!dmTargetId || loadingConvos) return;
+
+    const existing = conversations.find((c) => c.type === "dm" && c.id === dmTargetId);
+    if (existing) {
+      setActiveConvo(existing);
+      return;
+    }
+
+    // No existing thread — synthesize one so the user can send the first message
+    usersApi.get(dmTargetId).then((res) => {
+      setActiveConvo({
+        type: "dm",
+        id: res.user.id,
+        name: res.user.fullName,
+        avatar: res.user.profileImage,
+        lastMessage: null,
+      });
+    }).catch(() => {
+      setError("Could not start conversation — user not found.");
+    });
+    // deliberately not adding dmTargetId to deps beyond this effect's own guard —
+    // this should only run once when the page loads with a ?dm= param
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadingConvos, conversations]);
 
   const mapMessage = useCallback(
     (raw: any): Message => ({

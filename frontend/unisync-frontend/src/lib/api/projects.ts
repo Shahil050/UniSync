@@ -1,11 +1,12 @@
 import { api } from "../api-client";
 
 export const projectsApi = {
-  list: (params?: { mine?: boolean; status?: string; userId?: string }) => {
+  list: (params?: { mine?: boolean; status?: string; userId?: string; search?: string }) => {
     const qs = new URLSearchParams();
     if (params?.mine) qs.set("mine", "true");
     if (params?.status) qs.set("status", params.status);
     if (params?.userId) qs.set("userId", params.userId);
+    if (params?.search) qs.set("search", params.search);
     const query = qs.toString();
     return api.get(`/api/projects${query ? `?${query}` : ""}`);
   },

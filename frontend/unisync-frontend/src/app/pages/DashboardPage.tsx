@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
 import {
@@ -41,7 +42,9 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 
 export function DashboardPage() {
  const { user, onLogout } = useUser();
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get("tab") as Tab) || "overview";
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [profileOpen, setProfileOpen] = useState(false);
   return (
     <div className="min-h-screen bg-blue-50/50 pt-16">
