@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { isValidUuid } from "@/lib/validate-uuid";
+import { notify } from "@/lib/notify";
 
 export const DELETE = auth(async function DELETE(req, { params }) {
   if (!req.auth?.user?.id) {
@@ -48,6 +49,14 @@ export const DELETE = auth(async function DELETE(req, { params }) {
     await tx.projectMember.update({
       where: { projectId_userId: { projectId, userId: targetUserId } },
       data: { status: "REMOVED", leftAt: new Date() },
+    });
+
+    const projectInfo = await tx.project.findUnique({ where: { id: projectId }, select: { title: true } });
+    await notify(tx, {
+      userId: targetUserId,
+      type: "MEMBER_REMOVED",
+      message: `You were removed from "${projectInfo?.title}".`,
+      projectId,
     });
 
     await tx.projectAuditLog.create({

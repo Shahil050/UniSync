@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { parseJson } from "@/lib/parse-json";
 import { isValidUuid } from "@/lib/validate-uuid";
 import { Prisma } from "@/generated/prisma/client";
+import { notify } from "@/lib/notify";
 
 export const POST = auth(async function POST(req, { params }) {
   if (!req.auth?.user?.id) {
@@ -58,6 +59,13 @@ export const POST = auth(async function POST(req, { params }) {
   try {
     const awarded = await prisma.userBadge.create({
       data: { userId: targetUserId, badgeId, projectId },
+    });
+    const badge = await prisma.badge.findUnique({ where: { id: badgeId }, select: { name: true } });
+    await notify(prisma, {
+      userId: targetUserId,
+      type: "BADGE_AWARDED",
+      message: `You were awarded the "${badge?.name}" badge.`,
+      projectId,
     });
     return NextResponse.json({ success: true, badge: awarded }, { status: 201 });
   } catch (err) {

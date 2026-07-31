@@ -1,122 +1,137 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { PeerCard, type Peer } from "../shared/PeerCard";
 import { SearchBar } from "../shared/SearchBar";
-import { Filter } from "lucide-react";
+import { Filter, Search, Sparkles } from "lucide-react";
+import { usersApi } from "@/src/lib/api/users";
+import { ApiError } from "@/src/lib/api-client";
 
-const PEERS: Peer[] = [
-  {
-    id: 1,
-    name: "Kajal kUshwaha",
-    avatar: "/kajal.jpg",
-    faculty: "Computer Engineering",
-    interests: ["Machine Learning", "Computer Vision", "Python"],
-    reputation: 4.9,
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    sharedInterests: 3,
-    isConnected: false,
-  },
-  {
-    id: 2,
-    name: "shahil shrestha",
-    avatar: "/shahil.jpg",
-    faculty: "Information Technology",
-    interests: ["Blockchain", "Web3", "Backend Dev"],
-    reputation: 4.7,
-    github: "https://github.com",
-    sharedInterests: 2,
-    isConnected: true,
-  },
-  {
-    id: 3,
-    name: "Sapana kushwaha",
-    avatar: "/sapna.jpg",
-    faculty: "Software Engineering",
-    interests: ["Web Development", "React", "UI/UX"],
-    reputation: 4.6,
-    linkedin: "https://linkedin.com",
-    sharedInterests: 4,
-    isConnected: false,
-  },
-  {
-    id: 4,
-    name: "Bikash Mehta",
-    avatar: "/bikash.jpg",
-    faculty: "Computer Engineering",
-    interests: ["Cybersecurity", "Networking", "Linux"],
-    reputation: 4.8,
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    sharedInterests: 1,
-    isConnected: false,
-  },
-  {
-    id: 5,
-    name: "Ashish Singh",
-    avatar: "/ASHISH MEHTA.jpg",
-    faculty: "Information Technology",
-    interests: ["Data Science", "Visualization", "Statistics"],
-    reputation: 4.5,
-    linkedin: "https://linkedin.com",
-    sharedInterests: 2,
-    isConnected: false,
-  },
-  {
-    id: 6,
-    name: "Sushant Joshi",
-    avatar: "/sushant.jpg",
-    faculty: "Software Engineering",
-    interests: ["Mobile Dev", "Flutter", "Firebase"],
-    reputation: 4.4,
-    github: "https://github.com",
-    sharedInterests: 1,
-    isConnected: false,
-  },
-];
-const FILTERS = ["All", "Computer Engineering", "Information Technology", "Software Engineering"];
+const FACULTIES = ["All", "Computer Engineering", "Information Technology", "Software Engineering"];
+
+function toPeer(u: any, matchScore?: number): Peer {
+  return {
+    id: u.id,
+    name: u.fullName,
+    avatar: u.profileImage,
+    department: u.department,
+    interests: (u.skills ?? []).map((s: any) => s.skill.name),
+    github: u.githubUrl,
+    linkedin: u.linkedinUrl,
+    matchScore,
+  };
+}
 
 export function DiscoverPeers() {
-  const [peers, setPeers] = useState(PEERS);
-  const [activeFilter, setActiveFilter] = useState("All");
+  const router = useRouter();
 
-  const filtered = activeFilter === "All" ? peers : peers.filter((p) => p.faculty === activeFilter);
+  const [recommended, setRecommended] = useState<Peer[]>([]);
+  const [loadingRecommended, setLoadingRecommended] = useState(true);
 
-  const handleConnect = (id: number) => {
-    setPeers((prev) => prev.map((p) => p.id === id ? { ...p, isConnected: !p.isConnected } : p));
-  };
+  const [directory, setDirectory] = useState<Peer[]>([]);
+  const [loadingDirectory, setLoadingDirectory] = useState(true);
+  const [search, setSearch] = useState("");
+  const [faculty, setFaculty] = useState("All");
+  const [error, setError] = useState("");
+
+  const handleMessage = (id: string) => router.push(`/messages?dm=${id}`);
+
+  useEffect(() => {
+    usersApi
+      .discover()
+      .then((res) => setRecommended(res.users.map((u: any) => toPeer(u, u.similarityScore))))
+      .catch((err) => {
+        // Non-fatal — AI service may be down/unregistered; directory still works independently
+        console.error("Could not load recommendations:", err);
+      })
+      .finally(() => setLoadingRecommended(false));
+  }, []);
+
+  const loadDirectory = useCallback(async () => {
+    setLoadingDirectory(true);
+    setError("");
+    try {
+      const res = await usersApi.list({
+        search: search || undefined,
+        department: faculty !== "All" ? faculty : undefined,
+      });
+      setDirectory(res.users.map((u: any) => toPeer(u)));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not load students.");
+    } finally {
+      setLoadingDirectory(false);
+    }
+  }, [search, faculty]);
+
+  useEffect(() => {
+    const debounce = setTimeout(loadDirectory, 350);
+    return () => clearTimeout(debounce);
+  }, [loadDirectory]);
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-        <h2 className="font-bold text-slate-800 text-lg">Discover Peers</h2>
-        <div className="sm:ml-auto flex items-center gap-2 flex-wrap">
-          <SearchBar placeholder="Search peers..." className="w-64" />
-          <div className="flex items-center gap-1 p-1 bg-blue-50 rounded-xl">
-            <Filter size={14} className="text-blue-400 ml-1" />
-            {FILTERS.map((f) => (
-              <button
-                key={f}
-                onClick={() => setActiveFilter(f)}
-                className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                  activeFilter === f ? "bg-blue-600 text-white shadow-sm" : "text-slate-500 hover:text-blue-600"
-                }`}
-              >
-                {f === "All" ? f : f.split(" ")[0]}
-              </button>
-            ))}
+    <div className="space-y-8">
+      {/* AI Recommendations */}
+      {(loadingRecommended || recommended.length > 0) && (
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles size={16} className="text-blue-600" />
+            <h2 className="font-bold text-slate-800 text-lg">Recommended for You</h2>
+          </div>
+          {loadingRecommended ? (
+            <p className="text-slate-400 text-sm">Finding your matches...</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recommended.map((peer) => (
+                <PeerCard key={peer.id} peer={peer} onMessage={handleMessage} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Directory */}
+      <div className="space-y-5">
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <h2 className="font-bold text-slate-800 text-lg">All Students</h2>
+          <div className="sm:ml-auto flex items-center gap-2 flex-wrap">
+            <div className="relative">
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search peers..."
+                className="w-64 pl-9 pr-3 py-2 bg-white border border-blue-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
+              />
+            </div>
+            <div className="flex items-center gap-1 p-1 bg-blue-50 rounded-xl">
+              <Filter size={14} className="text-blue-400 ml-1" />
+              {FACULTIES.map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFaculty(f)}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                    faculty === f ? "bg-blue-600 text-white shadow-sm" : "text-slate-500 hover:text-blue-600"
+                  }`}
+                >
+                  {f === "All" ? f : f.split(" ")[0]}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((peer) => (
-          <PeerCard
-            key={peer.id}
-            peer={peer}
-            onConnect={handleConnect}
-          />
-        ))}
+        {error && <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {directory.map((peer) => (
+            <PeerCard key={peer.id} peer={peer} onMessage={handleMessage} />
+          ))}
+        </div>
+        {!loadingDirectory && directory.length === 0 && (
+          <p className="text-slate-400 text-sm text-center py-8">No students match these filters.</p>
+        )}
       </div>
     </div>
   );

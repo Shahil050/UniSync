@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { parseJson } from "@/lib/parse-json";
 import { isValidUuid } from "@/lib/validate-uuid";
+import { notify } from "@/lib/notify";
 
 export const PATCH = auth(async function PATCH(req, { params }) {
   if (!req.auth?.user?.id) {
@@ -58,6 +59,16 @@ export const PATCH = auth(async function PATCH(req, { params }) {
         status: newStatus,
         ...(decision === "ACCEPT" ? { joinedAt: new Date() } : {}),
     },
+    });
+
+    const projectInfo = await tx.project.findUnique({ where: { id: projectId }, select: { title: true } });
+    await notify(tx, {
+      userId: targetUserId,
+      type: decision === "ACCEPT" ? "MEMBERSHIP_ACCEPTED" : "MEMBERSHIP_REJECTED",
+      message: decision === "ACCEPT"
+        ? `Your request to join "${projectInfo?.title}" was accepted.`
+        : `Your request to join "${projectInfo?.title}" was declined.`,
+      projectId,
     });
 
     if (decision === "ACCEPT") {

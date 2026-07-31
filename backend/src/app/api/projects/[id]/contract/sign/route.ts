@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { isValidUuid } from "@/lib/validate-uuid";
+import { notify } from "@/lib/notify";
 
 export const POST = auth(async function POST(req, { params }) {
   if (!req.auth?.user?.id) {
@@ -48,6 +49,18 @@ export const POST = auth(async function POST(req, { params }) {
       data: { contractId: contract.id, userId },
     });
 
+    const project = await tx.project.findUnique({ where: { id: projectId }, select: { ownerId: true, title: true } });
+    const signer = await tx.user.findUnique({ where: { id: userId }, select: { fullName: true } });
+
+    if (project && project.ownerId !== userId) {
+      await notify(tx, {
+        userId: project.ownerId,
+        type: "CONTRACT_SIGNED",
+        message: `${signer?.fullName ?? "A member"} signed the agreement for "${project.title}".`,
+        projectId,
+      });
+    }
+
     let activated = false;
     if (contract.status === "DRAFT") {
       const [roleCount, signatureCount] = await Promise.all([
@@ -60,6 +73,20 @@ export const POST = auth(async function POST(req, { params }) {
           data: { status: "ACTIVE", finalizedAt: new Date() },
         });
         activated = true;
+        if (activated) {
+        const allMembers = await tx.contractRole.findMany({
+          where: { contractId: contract.id },
+          select: { userId: true },
+        });
+        for (const m of allMembers) {
+          await notify(tx, {
+            userId: m.userId,
+            type: "CONTRACT_ACTIVATED",
+            message: `The agreement for "${project?.title}" is now active — everyone has signed.`,
+            projectId,
+          });
+        }
+      }
       }
     }
 

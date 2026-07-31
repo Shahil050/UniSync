@@ -1,83 +1,99 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Bell, Users, FileSignature, MessageCircle, Star, X, Check } from "lucide-react";
+import { Bell, Users, FileSignature, Award, AlertTriangle, MessageCircle, Star, X, Check, UserMinus } from "lucide-react";
+import { notificationsApi } from "@/src/lib/api/notifications";
+import { ApiError } from "@/src/lib/api-client";
+
+type NotificationType =
+  | "MEMBERSHIP_REQUEST"
+  | "MEMBERSHIP_ACCEPTED"
+  | "MEMBERSHIP_REJECTED"
+  | "MEMBER_REMOVED"
+  | "CONTRACT_SIGNED"
+  | "CONTRACT_ACTIVATED"
+  | "BADGE_AWARDED"
+  | "PENALTY_ISSUED";
 
 type Notification = {
-  id: number;
-  type: "request" | "agreement" | "message" | "match" | "badge";
-  title: string;
-  description: string;
-  avatar: string;
-  time: string;
+  id: string;
+  type: NotificationType;
+  message: string;
   isRead: boolean;
+  createdAt: string;
 };
 
-const NOTIFICATIONS: Notification[] = [
-  {
-    id: 1,
-    type: "request",
-    title: "Collaboration Request",
-    description: "Priya Thapa wants to collaborate on your 'AI Chatbot' idea.",
-    avatar: "/kajal.jpg",
-    time: "5m ago",
-    isRead: false,
-  },
-  {
-    id: 2,
-    type: "agreement",
-    title: "Agreement Update",
-    description: "Roshan Karki accepted the Campus Event Aggregator agreement.",
-    avatar: "/shahil.jpg",
-    time: "1h ago",
-    isRead: false,
-  },
-  {
-    id: 3,
-    type: "match",
-    title: "New Peer Match",
-    description: "You matched with Anisha Basnet — 4 shared interests in Data Science!",
-    avatar: "/kajalimage2.jpg",
-    time: "3h ago",
-    isRead: true,
-  },
-  {
-    id: 4,
-    type: "message",
-    title: "New Message",
-    description: "Bikash Gurung sent a message in AI Project Group.",
-    avatar: "/user1image.jpg",
-    time: "5h ago",
-    isRead: true,
-  },
-  {
-    id: 5,
-    type: "badge",
-    title: "Badge Unlocked!",
-    description: "You earned the 'Team Player' badge for completing your first group project!",
-    avatar: "",
-    time: "1d ago",
-    isRead: true,
-  },
-];
-
-const typeConfig = {
-  request: { icon: <Users size={15} />, color: "text-blue-600", bg: "bg-blue-100" },
-  agreement: { icon: <FileSignature size={15} />, color: "text-blue-700", bg: "bg-blue-100" },
-  message: { icon: <MessageCircle size={15} />, color: "text-cyan-600", bg: "bg-cyan-100" },
-  match: { icon: <Star size={15} />, color: "text-blue-500", bg: "bg-blue-50" },
-  badge: { icon: <Bell size={15} />, color: "text-amber-600", bg: "bg-amber-100" },
+const typeConfig: Record<NotificationType, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
+  MEMBERSHIP_REQUEST: { label: "Join Request", icon: <Users size={15} />, color: "text-blue-600", bg: "bg-blue-100" },
+  MEMBERSHIP_ACCEPTED: { label: "Request Accepted", icon: <Users size={15} />, color: "text-green-600", bg: "bg-green-100" },
+  MEMBERSHIP_REJECTED: { label: "Request Declined", icon: <Users size={15} />, color: "text-slate-500", bg: "bg-slate-100" },
+  MEMBER_REMOVED: { label: "Removed from Project", icon: <UserMinus size={15} />, color: "text-red-600", bg: "bg-red-100" },
+  CONTRACT_SIGNED: { label: "Agreement Signed", icon: <FileSignature size={15} />, color: "text-blue-700", bg: "bg-blue-100" },
+  CONTRACT_ACTIVATED: { label: "Agreement Active", icon: <FileSignature size={15} />, color: "text-green-700", bg: "bg-green-100" },
+  BADGE_AWARDED: { label: "Badge Unlocked!", icon: <Award size={15} />, color: "text-amber-600", bg: "bg-amber-100" },
+  PENALTY_ISSUED: { label: "Penalty Issued", icon: <AlertTriangle size={15} />, color: "text-red-600", bg: "bg-red-100" },
 };
+
+function timeAgo(iso: string) {
+  const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
 
 export function NotificationsPanel() {
-  const [notifications, setNotifications] = useState(NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  
+  const load = useCallback(async () => {
+    try {
+      const res = await notificationsApi.list();
+      setNotifications(res.notifications);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not load notifications.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const dismiss = (id: number) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  useEffect(() => {
+    load();
+    const interval = setInterval(load, 15000);
+    return () => clearInterval(interval);
+  }, [load]);
+
+  const markRead = async (id: string) => {
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+    try {
+      await notificationsApi.markRead(id);
+    } catch {
+      // silent — next poll will reconcile if this failed
+    }
   };
 
-  const markRead = (id: number) => {
-    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, isRead: true } : n));
+  const markAllRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    try {
+      await notificationsApi.markAllRead();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not mark all as read.");
+    }
+  };
+
+  const dismiss = async (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    try {
+      await notificationsApi.dismiss(id);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not dismiss notification.");
+      load(); // resync if the delete actually failed server-side
+    }
   };
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
@@ -93,18 +109,20 @@ export function NotificationsPanel() {
             </span>
           )}
         </div>
-        <button
-          onClick={() => setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))}
-          className="flex items-center gap-1.5 text-blue-500 text-sm hover:underline"
-        >
-          <Check size={14} />
-          Mark all read
-        </button>
+        {unreadCount > 0 && (
+          <button onClick={markAllRead} className="flex items-center gap-1.5 text-blue-500 text-sm hover:underline">
+            <Check size={14} />
+            Mark all read
+          </button>
+        )}
       </div>
 
+      {error && <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>}
       <div className="space-y-3">
+        {loading && <p className="text-slate-400 text-sm">Loading...</p>}
+
         <AnimatePresence>
-          {notifications.map((n) => {
+          {!loading && notifications.map((n) => {
             const config = typeConfig[n.type];
             return (
               <motion.div
@@ -112,29 +130,22 @@ export function NotificationsPanel() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20, height: 0, marginTop: 0 }}
-                onClick={() => markRead(n.id)}
+                onClick={() => !n.isRead && markRead(n.id)}
                 className={`relative flex items-start gap-4 p-4 rounded-2xl border cursor-pointer transition-all ${
                   !n.isRead ? "bg-blue-50 border-blue-200 shadow-sm" : "bg-white border-blue-100 hover:bg-slate-50"
                 }`}
               >
-                {/* Avatar / type icon */}
                 <div className="relative flex-shrink-0">
-                  {n.avatar ? (
-                    <img src={n.avatar} alt="" className="w-10 h-10 rounded-full object-cover border border-blue-100" />
-                  ) : (
-                    <div className={`w-10 h-10 ${config.bg} rounded-xl flex items-center justify-center ${config.color}`}>
-                      {config.icon}
-                    </div>
-                  )}
-                  {!n.isRead && (
-                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white" />
-                  )}
+                  <div className={`w-10 h-10 ${config.bg} rounded-xl flex items-center justify-center ${config.color}`}>
+                    {config.icon}
+                  </div>
+                  {!n.isRead && <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white" />}
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-800 text-sm">{n.title}</p>
-                  <p className="text-slate-500 text-xs mt-0.5 leading-relaxed">{n.description}</p>
-                  <p className="text-blue-400 text-xs mt-1">{n.time}</p>
+                  <p className="font-semibold text-slate-800 text-sm">{config.label}</p>
+                  <p className="text-slate-500 text-xs mt-0.5 leading-relaxed">{n.message}</p>
+                  <p className="text-blue-400 text-xs mt-1">{timeAgo(n.createdAt)}</p>
                 </div>
 
                 <button
@@ -148,7 +159,7 @@ export function NotificationsPanel() {
           })}
         </AnimatePresence>
 
-        {notifications.length === 0 && (
+        {!loading && notifications.length === 0 && (
           <div className="text-center py-12 text-slate-400">
             <Bell size={32} className="mx-auto mb-3 opacity-30" />
             <p className="text-sm">All caught up!</p>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { isValidUuid } from "@/lib/validate-uuid";
+import { notify } from "@/lib/notify";
 
 export const POST = auth(async function POST(req, { params }) {
   if (!req.auth?.user?.id) {
@@ -18,7 +19,7 @@ export const POST = auth(async function POST(req, { params }) {
   const outcome = await prisma.$transaction(async (tx) => {
     const project = await tx.project.findFirst({
       where: { id: projectId, deletedAt: null },
-      select: { status: true, ownerId: true },
+      select: { status: true, ownerId: true, title: true },
     });
 
     if (!project) {
@@ -62,6 +63,14 @@ export const POST = auth(async function POST(req, { params }) {
         action: "STATUS_CHANGE",
         changes: { entity: "member", to: "PENDING", userId },
       },
+    });
+
+    const requester = await tx.user.findUnique({ where: { id: userId }, select: { fullName: true } });
+    await notify(tx, {
+      userId: project.ownerId,
+      type: "MEMBERSHIP_REQUEST",
+      message: `${requester?.fullName ?? "Someone"} requested to join "${project.title}".`,
+      projectId,
     });
 
     return { status: 201 as const };

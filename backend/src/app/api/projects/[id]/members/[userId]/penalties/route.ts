@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { parseJson } from "@/lib/parse-json";
 import { isValidUuid } from "@/lib/validate-uuid";
 import { PenaltySeverity } from "@/generated/prisma/client";
+import { notify } from "@/lib/notify";
 
 const VALID_SEVERITIES = ["MINOR", "MAJOR"];
 
@@ -69,6 +70,13 @@ export const POST = auth(async function POST(req, { params }) {
 
   const penalty = await prisma.penaltyTag.create({
     data: { userId: targetUserId, projectId, reason: reason.trim(), severity: sev },
+  });
+
+  await notify(prisma, {
+    userId: targetUserId,
+    type: "PENALTY_ISSUED",
+    message: `A penalty tag was issued on "${projectId}".`, // consider fetching project title for a friendlier message
+    projectId,
   });
 
   return NextResponse.json({ success: true, penalty }, { status: 201 });
