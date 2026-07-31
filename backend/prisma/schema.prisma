@@ -91,6 +91,17 @@ enum ModerationStatus {
   REMOVED
 }
 
+enum NotificationType {
+  MEMBERSHIP_REQUEST
+  MEMBERSHIP_ACCEPTED
+  MEMBERSHIP_REJECTED
+  MEMBER_REMOVED
+  CONTRACT_SIGNED
+  CONTRACT_ACTIVATED
+  BADGE_AWARDED
+  PENALTY_ISSUED
+}
+
 // ------------USER AND USER SKILLS------------
 model User {
   id                 String                   @id @default(uuid()) @db.Uuid
@@ -109,6 +120,7 @@ model User {
   deletedAt          DateTime?
   emailVerified      DateTime?
   institutionId      String?                  @db.Uuid
+  skillsUpdatedAt    DateTime?
 
   accounts           Account[]
   activityLogs       ActivityLog[]
@@ -130,6 +142,7 @@ model User {
   embedding          UserEmbedding?
   skills             UserSkill[]
   papers             Paper[]
+  notifications      Notification[]
 
   @@index([deletedAt])
 }
@@ -244,6 +257,7 @@ model Project {
   auditLogs     ProjectAuditLog[]
   members       ProjectMember[]
   badgesAwarded UserBadge[]
+  notifications Notification[]
 
   githubUrl     String?
   boardUrl      String?
@@ -465,10 +479,28 @@ model Paper {
   id        String   @id @default(uuid()) @db.Uuid
   title     String
   authors   String?
+  url       String?
   addedById String   @db.Uuid
   createdAt DateTime @default(now())
 
   addedBy User @relation(fields: [addedById], references: [id])
 
   @@index([addedById])
+}
+
+// ------------NOTIFICATION------------
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  type      NotificationType
+  message   String
+  projectId String?          @db.Uuid
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([userId, isRead, createdAt])
+  @@index([projectId])
 }
