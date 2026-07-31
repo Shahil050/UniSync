@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
 import {
   LayoutDashboard,
-  User,
   Users,
   Lightbulb,
   FileSignature,
@@ -23,6 +22,7 @@ import { IdeasFeed } from "../components/dashboard/IdeasFeed";
 import { AgreementsModule } from "../components/dashboard/AgreementsModule";
 import { MessagesModule } from "../components/dashboard/MessagesModule";
 import { ActivityLogs } from "../components/dashboard/ActivityLogs";
+import { DeadlineReminders } from "../components/dashboard/DeadlineReminders";
 import { NotificationsPanel } from "../components/dashboard/NotificationsPanel";
 import { SearchBar } from "../components/shared/SearchBar";
 import { useUser } from "../UserContext";
@@ -84,7 +84,7 @@ export function DashboardPage() {
       <ChevronDown size={16} className="text-slate-500" />
     </button>
 
-    <AnimatePresence>
+        <AnimatePresence>
       {profileOpen && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -92,6 +92,7 @@ export function DashboardPage() {
           exit={{ opacity: 0, y: -10 }}
           className="absolute right-0 mt-3 w-72 rounded-2xl bg-white shadow-2xl border border-blue-100 overflow-hidden z-50"
         >
+
           <div className="p-5 text-center border-b border-slate-100">
             <img
               src={user.avatar}
@@ -108,6 +109,7 @@ export function DashboardPage() {
             </p>
           </div>
 
+
           <div className="p-4 space-y-2">
 
             <button
@@ -120,18 +122,20 @@ export function DashboardPage() {
               View Profile
             </button>
 
+
             <button
               onClick={() => {
-    onLogout();
-    setProfileOpen(false);
-}}
+                onLogout();
+                setProfileOpen(false);
+              }}
               className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 border border-red-200 text-red-600 hover:bg-red-50 transition"
             >
-              <LogOut size={16} />
+              <LogOut size={16}/>
               Logout
             </button>
 
           </div>
+
         </motion.div>
       )}
     </AnimatePresence>
@@ -203,6 +207,9 @@ export function DashboardPage() {
                   </div>
                 ))}
               </div>
+
+    
+             <DeadlineReminders />
 
               {/* Recent Ideas */}
               <div className="bg-white rounded-2xl border border-blue-100 shadow-sm p-5">
