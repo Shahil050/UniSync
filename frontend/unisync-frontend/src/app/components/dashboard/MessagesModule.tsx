@@ -5,13 +5,14 @@ import {
   Send, Paperclip, Image as ImageIcon, Smile, Users, Github, Trello, FileText, ExternalLink, MoreVertical, File, X, Edit3,
   CheckCircle, User as UserIcon, Globe, UserPlus, Trash2, Crown, BellOff, Bell, Trash, LogOut, Info, ShieldAlert, FolderOpen,
   Plus, Download, Camera,
-  User,
+  User, AlertCircle, Award, AlertTriangle, CheckCircle2,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import type { AppUser } from "../../UserContext";
 import { messagesApi } from "@/src/lib/api/messages";
 import { projectsApi } from "@/src/lib/api/projects";
 import { usersApi } from "@/src/lib/api/users";
+import { badgesApi } from "@/src/lib/api/badges";
 import { ApiError } from "@/src/lib/api-client";
 import { papersApi } from "@/src/lib/api/papers";
 
@@ -31,16 +32,22 @@ export type Message = {
   text: string;
   time: string;
   isMine: boolean;
+  fileUrl: string | null;
+  fileName: string | null;
+  fileType: string | null;
+  fileSize: number | null;
 };
 
 type Member = { userId: string; role: string; user: { id: string; fullName: string; profileImage: string | null } };
 type PendingRequest = { userId: string; joinedAt: string; user: { id: string; fullName: string; profileImage: string | null } };
 type Resource = { id: string; title: string; type: string; url: string; addedBy: { fullName: string }; createdAt: string };
+type BadgeDef = { id: string; name: string; description: string | null; iconUrl: string | null };
 
 
 type ProjectDetail = {
   id: string;
   ownerId: string;
+  status: "OPEN" | "IN_PROGRESS" | "COMPLETED" | "ABANDONED";
   githubUrl: string | null;
   boardUrl: string | null;
   docsUrl: string | null;
@@ -133,6 +140,18 @@ export function MessagesModule({ user }: { user: AppUser }) {
   const [showEditLinksModal, setShowEditLinksModal] = useState(false);
   const [showEmojis, setShowEmojis] = useState(false);
   const [selectedMember, setSelectedMember] = useState<MemberProfile | null>(null);
+  const [startingProject, setStartingProject] = useState(false);
+  const [completingProject, setCompletingProject] = useState(false);
+  const [badgeCatalog, setBadgeCatalog] = useState<BadgeDef[]>([]);
+  const [badgeTarget, setBadgeTarget] = useState<Member | null>(null);
+  const [selectedBadgeId, setSelectedBadgeId] = useState("");
+  const [awardingBadge, setAwardingBadge] = useState(false);
+  const [penaltyTarget, setPenaltyTarget] = useState<Member | null>(null);
+  const [penaltyReason, setPenaltyReason] = useState("");
+  const [penaltySeverity, setPenaltySeverity] = useState<"MINOR" | "MAJOR">("MINOR");
+  const [issuingPenalty, setIssuingPenalty] = useState(false);
+  const [ownerActionError, setOwnerActionError] = useState("");
+  const [ownerActionNotice, setOwnerActionNotice] = useState("");
 
   const [githubInput, setGithubInput] = useState("");
   const [boardInput, setBoardInput] = useState("");
@@ -141,6 +160,30 @@ export function MessagesModule({ user }: { user: AppUser }) {
   const [resTitle, setResTitle] = useState("");
   const [resUrl, setResUrl] = useState("");
   const [resType, setResType] = useState<"document" | "paper" | "link">("paper");
+
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [attachError, setAttachError] = useState("");
+  const [sending, setSending] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const MAX_ATTACHMENT_MB = 20;
+
+  const pickAttachment = (f: File | undefined | null) => {
+    if (!f) return;
+    if (f.size > MAX_ATTACHMENT_MB * 1024 * 1024) {
+      setAttachError(`File must be under ${MAX_ATTACHMENT_MB}MB.`);
+      return;
+    }
+    setAttachError("");
+    setAttachedFile(f);
+  };
+
+  const clearAttachment = () => {
+    setAttachedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -185,6 +228,10 @@ export function MessagesModule({ user }: { user: AppUser }) {
       text: raw.content,
       time: formatTime(raw.createdAt),
       isMine: raw.senderId === user.id,
+      fileUrl: raw.fileUrl ?? null,
+      fileName: raw.fileName ?? null,
+      fileType: raw.fileType ?? null,
+      fileSize: raw.fileSize ?? null,
     }),
     [user.id]
   );
@@ -287,21 +334,32 @@ export function MessagesModule({ user }: { user: AppUser }) {
 
   // --- MESSAGING ACTIONS ---
   const sendMessage = async () => {
-    if (!input.trim() || !activeConvo) return;
+    if ((!input.trim() && !attachedFile) || !activeConvo || sending) return;
     const content = input;
+    const file = attachedFile;
 
     setInput("");
     setShowEmojis(false);
+    clearAttachment();
+    setSending(true);
 
     try {
       await messagesApi.send(
-        activeConvo.type === "group" ? { projectId: activeConvo.id, content } : { recipientId: activeConvo.id, content }
+        activeConvo.type === "group"
+          ? { projectId: activeConvo.id, content, file }
+          : { recipientId: activeConvo.id, content, file }
       );
       await loadMessages(activeConvo);
       loadConversations();
+      if (file && activeConvo.type === "group") {
+        projectsApi.listResources(activeConvo.id).then((res) => setResources(res.resources)).catch(() => {});
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not send message.");
       setInput(content);
+      if (file) pickAttachment(file);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -390,6 +448,90 @@ export function MessagesModule({ user }: { user: AppUser }) {
     }
   };
 
+  const handleStartProject = async () => {
+    if (!activeConvo) return;
+    if (!confirm("Start this project? The agreement will become visible to members and they'll be notified to sign it.")) return;
+    setStartingProject(true);
+    try {
+      await projectsApi.start(activeConvo.id);
+      await loadProjectHub(activeConvo.id);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not start project.");
+    } finally {
+      setStartingProject(false);
+    }
+  };
+
+  const handleCompleteProject = async () => {
+    if (!activeConvo) return;
+    if (!confirm("Mark this project as completed? You'll then be able to award badges and issue penalty tags to members.")) return;
+    setCompletingProject(true);
+    try {
+      await projectsApi.updateStatus(activeConvo.id, "COMPLETED");
+      await loadProjectHub(activeConvo.id);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not mark project as completed.");
+    } finally {
+      setCompletingProject(false);
+    }
+  };
+
+  const openBadgeModal = async (member: Member) => {
+    setOwnerActionError("");
+    setOwnerActionNotice("");
+    setSelectedBadgeId("");
+    setBadgeTarget(member);
+    if (badgeCatalog.length === 0) {
+      try {
+        const res = await badgesApi.list();
+        setBadgeCatalog(res.badges);
+      } catch (err) {
+        setOwnerActionError(err instanceof ApiError ? err.message : "Could not load badge catalog.");
+      }
+    }
+  };
+
+  const handleAwardBadge = async () => {
+    if (!activeConvo || !badgeTarget || !selectedBadgeId) return;
+    setAwardingBadge(true);
+    setOwnerActionError("");
+    try {
+      await projectsApi.awardBadge(activeConvo.id, badgeTarget.userId, selectedBadgeId);
+      setOwnerActionNotice(`Badge awarded to ${badgeTarget.user.fullName}.`);
+      setBadgeTarget(null);
+    } catch (err) {
+      setOwnerActionError(err instanceof ApiError ? err.message : "Could not award badge.");
+    } finally {
+      setAwardingBadge(false);
+    }
+  };
+
+  const openPenaltyModal = (member: Member) => {
+    setOwnerActionError("");
+    setOwnerActionNotice("");
+    setPenaltyReason("");
+    setPenaltySeverity("MINOR");
+    setPenaltyTarget(member);
+  };
+
+  const handleIssuePenalty = async () => {
+    if (!activeConvo || !penaltyTarget || !penaltyReason.trim()) return;
+    setIssuingPenalty(true);
+    setOwnerActionError("");
+    try {
+      await projectsApi.issuePenalty(activeConvo.id, penaltyTarget.userId, {
+        reason: penaltyReason.trim(),
+        severity: penaltySeverity,
+      });
+      setOwnerActionNotice(`Penalty tag issued to ${penaltyTarget.user.fullName}.`);
+      setPenaltyTarget(null);
+    } catch (err) {
+      setOwnerActionError(err instanceof ApiError ? err.message : "Could not issue penalty.");
+    } finally {
+      setIssuingPenalty(false);
+    }
+  };
+
   const openMemberProfile = async (userId: string) => {
     try {
       const res = await usersApi.get(userId);
@@ -467,7 +609,42 @@ export function MessagesModule({ user }: { user: AppUser }) {
                 </div>
               </div>
 
-              {activeConvo.type === "group" && (
+              <div className="flex items-center gap-2">
+                {activeConvo.type === "group" && isOwner && projectDetail?.status === "OPEN" && (
+                  <button
+                    onClick={handleStartProject}
+                    disabled={startingProject}
+                    className="flex items-center gap-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 px-3 py-1.5 rounded-xl transition-colors"
+                    title="Officially start the project — this unlocks the agreement for members and notifies them to sign"
+                  >
+                    <CheckCircle size={14} />
+                    {startingProject ? "Starting..." : "Start Project"}
+                  </button>
+                )}
+                {activeConvo.type === "group" && !isOwner && projectDetail?.status === "IN_PROGRESS" && (
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-xl">
+                    <CheckCircle size={14} />
+                    In Progress
+                  </span>
+                )}
+                {activeConvo.type === "group" && isOwner && projectDetail?.status === "IN_PROGRESS" && (
+                  <button
+                    onClick={handleCompleteProject}
+                    disabled={completingProject}
+                    className="flex items-center gap-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-3 py-1.5 rounded-xl transition-colors"
+                    title="Mark this project as completed — unlocks badge and penalty issuance"
+                  >
+                    <Award size={14} />
+                    {completingProject ? "Completing..." : "Mark Completed"}
+                  </button>
+                )}
+                {activeConvo.type === "group" && projectDetail?.status === "COMPLETED" && (
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl">
+                    <CheckCircle2 size={14} />
+                    Completed
+                  </span>
+                )}
+                {activeConvo.type === "group" && (
                 <div className="relative" ref={menuRef}>
                   <button onClick={() => setShowThreeDotsMenu(!showThreeDotsMenu)} className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors">
                     <MoreVertical size={18} />
@@ -484,7 +661,8 @@ export function MessagesModule({ user }: { user: AppUser }) {
                     </div>
                   )}
                 </div>
-              )}
+                )}
+              </div>
             </div>
 
             {error && <div className="px-6 py-2 bg-red-50 text-red-600 text-xs border-b border-red-100">{error}</div>}
@@ -497,9 +675,41 @@ export function MessagesModule({ user }: { user: AppUser }) {
                   {!msg.isMine && <UserAvatar name={msg.senderName} src={msg.avatar} size="sm" />}
                   <div className={`max-w-[70%] ${msg.isMine ? "items-end" : "items-start"} flex flex-col`}>
                     {!msg.isMine && <span className="text-[11px] text-slate-500 mb-1 ml-1 font-medium">{msg.senderName}</span>}
-                    <div className={`px-4 py-2.5 rounded-2xl text-sm shadow-sm ${msg.isMine ? "bg-blue-600 text-white rounded-br-none" : "bg-white text-slate-800 border border-slate-200 rounded-bl-none"}`}>
-                      {msg.text}
-                    </div>
+
+                    {msg.fileUrl && (
+                      msg.fileType?.startsWith("image/") ? (
+                        <a href={msg.fileUrl} target="_blank" rel="noreferrer" className="block mb-1 max-w-[220px] rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+                          <img src={msg.fileUrl} alt={msg.fileName ?? "attachment"} className="w-full h-auto object-cover" />
+                        </a>
+                      ) : (
+                        <a
+                          href={msg.fileUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={`flex items-center gap-2.5 mb-1 px-3.5 py-2.5 rounded-2xl border shadow-sm min-w-0 ${
+                            msg.isMine ? "bg-blue-500/90 border-blue-400 text-white" : "bg-white border-slate-200 text-slate-800"
+                          }`}
+                        >
+                          <File size={18} className={msg.isMine ? "text-white flex-shrink-0" : "text-blue-600 flex-shrink-0"} />
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium truncate max-w-[160px]">{msg.fileName ?? "Attachment"}</p>
+                            {typeof msg.fileSize === "number" && (
+                              <p className={`text-[10px] ${msg.isMine ? "text-blue-100" : "text-slate-400"}`}>
+                                {(msg.fileSize / 1024 / 1024).toFixed(1)} MB
+                              </p>
+                            )}
+                          </div>
+                          <Download size={14} className={`flex-shrink-0 ${msg.isMine ? "text-white" : "text-slate-400"}`} />
+                        </a>
+                      )
+                    )}
+
+                    {msg.text && (
+                      <div className={`px-4 py-2.5 rounded-2xl text-sm shadow-sm ${msg.isMine ? "bg-blue-600 text-white rounded-br-none" : "bg-white text-slate-800 border border-slate-200 rounded-bl-none"}`}>
+                        {msg.text}
+                      </div>
+                    )}
+
                     <span className="text-[10px] text-slate-400 mt-1 mx-1">{msg.time}</span>
                   </div>
                 </div>
@@ -508,6 +718,45 @@ export function MessagesModule({ user }: { user: AppUser }) {
             </div>
 
             <div className="px-5 py-3 bg-white border-t border-slate-200 relative">
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={(e) => { pickAttachment(e.target.files?.[0]); e.target.value = ""; }}
+              />
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => { pickAttachment(e.target.files?.[0]); e.target.value = ""; }}
+              />
+
+              {attachError && (
+                <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs">
+                  <AlertCircle size={14} className="flex-shrink-0" />
+                  <span>{attachError}</span>
+                </div>
+              )}
+
+              {attachedFile && (
+                <div className="flex items-center gap-2.5 mb-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-xl">
+                  {attachedFile.type.startsWith("image/") ? (
+                    <ImageIcon size={16} className="text-blue-600 flex-shrink-0" />
+                  ) : (
+                    <File size={16} className="text-blue-600 flex-shrink-0" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-slate-800 truncate">{attachedFile.name}</p>
+                    <p className="text-[10px] text-slate-400">{(attachedFile.size / 1024 / 1024).toFixed(1)} MB</p>
+                  </div>
+                  <button onClick={clearAttachment} className="p-1 text-slate-400 hover:text-red-500 flex-shrink-0">
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
+
+
               {showEmojis && (
                 <div className="absolute bottom-16 left-6 bg-white border border-slate-200 shadow-xl rounded-xl p-2 flex gap-2 z-20">
                   {["👍", "🚀", "🔥", "✅", "💡", "🎉", "❤️"].map((emoji) => (
@@ -519,10 +768,10 @@ export function MessagesModule({ user }: { user: AppUser }) {
               )}
               <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 p-1.5 rounded-xl">
                 <div className="flex items-center">
-                  <button disabled className="p-2 text-slate-300 rounded-lg cursor-not-allowed" title="File attachments coming soon">
+                  <button onClick={() => fileInputRef.current?.click()} className="p-2 text-slate-400 hover:text-blue-600 rounded-lg" title="Attach a file">
                     <Paperclip size={18} />
                   </button>
-                  <button disabled className="p-2 text-slate-300 rounded-lg cursor-not-allowed" title="Image uploads coming soon">
+                  <button onClick={() => imageInputRef.current?.click()} className="p-2 text-slate-400 hover:text-blue-600 rounded-lg" title="Attach an image">
                     <ImageIcon size={18} />
                   </button>
                   <button onClick={() => setShowEmojis(!showEmojis)} className="p-2 text-slate-400 hover:text-amber-500 rounded-lg">
@@ -537,8 +786,8 @@ export function MessagesModule({ user }: { user: AppUser }) {
                   placeholder="Type your message..."
                   className="flex-1 bg-transparent px-2 py-1.5 text-sm focus:outline-none text-slate-800"
                 />
-                <button onClick={sendMessage} disabled={!input.trim()} className="p-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-40">
-                  <Send size={16} />
+                <button onClick={sendMessage} disabled={(!input.trim() && !attachedFile) || sending} className="p-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-40">
+                  {sending ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin block" /> : <Send size={16} />}
                 </button>
               </div>
             </div>
@@ -628,6 +877,11 @@ export function MessagesModule({ user }: { user: AppUser }) {
                   </button>
                 )}
               </div>
+              {(ownerActionNotice || ownerActionError) && (
+                <div className={`mb-2 px-2.5 py-1.5 rounded-lg text-[11px] font-medium ${ownerActionError ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700"}`}>
+                  {ownerActionError || ownerActionNotice}
+                </div>
+              )}
               <div className="space-y-2">
                 {projectDetail.members.map((m) => {
                   const memberIsOwner = m.userId === projectDetail.ownerId;
@@ -643,10 +897,22 @@ export function MessagesModule({ user }: { user: AppUser }) {
                           <p className="text-[10px] text-slate-500 truncate">{m.role}</p>
                         </div>
                       </div>
-                      {isOwner && !memberIsOwner && (
+                      {isOwner && !memberIsOwner && projectDetail.status !== "COMPLETED" && (
                         <button onClick={() => handleRemoveMember(m.userId)} className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600 p-1 transition-opacity" title="Remove member">
                           <Trash2 size={14} />
                         </button>
+                      )}
+                      {isOwner && projectDetail.status === "COMPLETED" && (
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button onClick={() => openBadgeModal(m)} className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Award badge">
+                            <Award size={14} />
+                          </button>
+                          {!memberIsOwner && (
+                              <button onClick={() => openPenaltyModal(m)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Issue penalty">
+                                <AlertTriangle size={14} />
+                              </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   );
@@ -840,6 +1106,87 @@ export function MessagesModule({ user }: { user: AppUser }) {
             <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
               <button onClick={() => setShowEditLinksModal(false)} className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600">Cancel</button>
               <button onClick={handleSaveLinks} className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700">Save</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Award badge (owner only, completed projects) */}
+      {badgeTarget && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative border border-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <Award size={16} className="text-amber-500" /> Award Badge to {badgeTarget.user.fullName}
+              </h3>
+              <button onClick={() => setBadgeTarget(null)} className="text-slate-400 p-1"><X size={18} /></button>
+            </div>
+            {ownerActionError && <div className="mt-3 px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs">{ownerActionError}</div>}
+            <div className="space-y-1.5 my-4 max-h-64 overflow-y-auto">
+              {badgeCatalog.length === 0 && <p className="text-xs text-slate-400 text-center py-4">No badges available.</p>}
+              {badgeCatalog.map((b) => (
+                <label key={b.id} className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-colors ${selectedBadgeId === b.id ? "border-blue-400 bg-blue-50" : "border-slate-200 hover:bg-slate-50"}`}>
+                  <input type="radio" name="badge" value={b.id} checked={selectedBadgeId === b.id} onChange={() => setSelectedBadgeId(b.id)} className="mt-0.5" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-800">{b.name}</p>
+                    {b.description && <p className="text-[11px] text-slate-500">{b.description}</p>}
+                  </div>
+                </label>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <button onClick={() => setBadgeTarget(null)} className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600">Cancel</button>
+              <button
+                onClick={handleAwardBadge}
+                disabled={!selectedBadgeId || awardingBadge}
+                className="px-4 py-2 bg-amber-500 text-white rounded-xl text-xs font-semibold hover:bg-amber-600 disabled:opacity-50"
+              >
+                {awardingBadge ? "Awarding..." : "Award Badge"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Issue penalty (owner only, completed projects) */}
+      {penaltyTarget && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative border border-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <AlertTriangle size={16} className="text-red-500" /> Issue Penalty to {penaltyTarget.user.fullName}
+              </h3>
+              <button onClick={() => setPenaltyTarget(null)} className="text-slate-400 p-1"><X size={18} /></button>
+            </div>
+            {ownerActionError && <div className="mt-3 px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs">{ownerActionError}</div>}
+            <div className="space-y-3 my-4">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Reason *</label>
+                <textarea
+                  value={penaltyReason}
+                  onChange={(e) => setPenaltyReason(e.target.value)}
+                  rows={3}
+                  placeholder="e.g. Missed 3+ scheduled meetings without notice."
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Severity</label>
+                <select value={penaltySeverity} onChange={(e) => setPenaltySeverity(e.target.value as "MINOR" | "MAJOR")} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none">
+                  <option value="MINOR">Minor</option>
+                  <option value="MAJOR">Major</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <button onClick={() => setPenaltyTarget(null)} className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600">Cancel</button>
+              <button
+                onClick={handleIssuePenalty}
+                disabled={!penaltyReason.trim() || issuingPenalty}
+                className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 disabled:opacity-50"
+              >
+                {issuingPenalty ? "Issuing..." : "Issue Penalty"}
+              </button>
             </div>
           </div>
         </div>

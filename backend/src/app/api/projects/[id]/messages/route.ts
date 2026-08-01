@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { isValidUuid } from "@/lib/validate-uuid";
+import { serializeMessage } from "@/lib/serialize-message";
 
 export const GET = auth(async function GET(req, { params }) {
   if (!req.auth?.user?.id) {
@@ -41,5 +42,5 @@ export const GET = auth(async function GET(req, { params }) {
     },
   });
 
-  return NextResponse.json({ success: true, messages });
+  return NextResponse.json({ success: true, messages: messages.map(serializeMessage) });
 });

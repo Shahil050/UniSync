@@ -71,6 +71,7 @@ export const POST = auth(async function POST(req, { params }) {
       type: "MEMBERSHIP_REQUEST",
       message: `${requester?.fullName ?? "Someone"} requested to join "${project.title}".`,
       projectId,
+      relatedUserId: userId,
     });
 
     return { status: 201 as const };
