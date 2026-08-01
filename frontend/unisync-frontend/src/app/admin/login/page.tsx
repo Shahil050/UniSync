@@ -4,39 +4,51 @@ import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Mail } from "lucide-react";
+import { authApi } from "@/src/lib/api/auth";
+import { ApiError } from "@/src/lib/api-client";
+
 export default function AdminLoginPage() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
+    try {
+      const res = await authApi.login({ email, password });
 
-  const adminProfile = {
-    name: "Kajal Kushwaha",
-    email: email,
-    role: "Super Admin",
-    lastLogin: new Date().toLocaleDateString(),
-    image: "/unisync-logo.png",
+      if (res.user.role !== "ADMIN") {
+        await authApi.logout();
+        setError("This account does not have admin access.");
+        return;
+      }
+
+      const adminProfile = {
+        name: res.user.name,
+        email: res.user.email,
+        role: "ADMIN",
+        lastLogin: new Date().toLocaleDateString(),
+        image: "/unisync-logo.png",
+
+      };
+      localStorage.setItem("adminProfile", JSON.stringify(adminProfile));
+      
+      router.push("/admin");
+
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+
+    } finally {
+      setLoading(false);
+    }
   };
 
-
-  localStorage.setItem(
-    "adminLoggedIn",
-    "true"
-  );
-
-
-  localStorage.setItem(
-    "adminProfile",
-    JSON.stringify(adminProfile)
-  );
-
-
-  router.push("/admin");
-};
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 px-4">
       
@@ -45,14 +57,14 @@ export default function AdminLoginPage() {
         {/* Logo Section */}
         <div className="text-center mb-8">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-white shadow-lg p-3">
-  <Image
-    src="/logo.avif"
-    alt="UniSync Logo"
-    width={80}
-    height={80}
-    className="object-contain"
-  />
-</div>
+            <Image
+              src="/logo.avif"
+              alt="UniSync Logo"
+              width={80}
+              height={80}
+              className="object-contain"
+            />
+          </div>
 
           <h1 className="mt-4 text-3xl font-bold text-white">
             Admin Portal
@@ -112,7 +124,7 @@ export default function AdminLoginPage() {
 
 
             {/* Remember */}
-            <div className="flex items-center justify-between text-sm">
+            {/* <div className="flex items-center justify-between text-sm">
 
               <label className="flex items-center gap-2 text-gray-600">
                 <input 
@@ -128,16 +140,20 @@ export default function AdminLoginPage() {
               >
                 Forgot password?
               </button>
+            </div> */}
 
-            </div>
-
+            {/* Error */}
+            {error && (
+              <p className="text-sm text-red-600 text-center">{error}</p>
+            )}
 
             {/* Button */}
             <button
               type="submit"
-              className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700 active:scale-95"
+              disabled={loading}
+              className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Sign In
+              {loading ? "Signing in..." : "Sign In"}
             </button>
 
           </form>

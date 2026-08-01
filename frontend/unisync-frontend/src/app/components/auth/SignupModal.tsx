@@ -166,7 +166,7 @@ export function SignupModal({ open, onClose, onSwitchToLogin }: SignupModalProps
                       <span className="font-semibold text-blue-700">{form.email}</span>. Click it to activate your account, then sign in.
                     </p>
                   </div>
-                  <button
+                  {/* <button
                     onClick={() => {
                       handleClose();
                       onSwitchToLogin();
@@ -174,7 +174,7 @@ export function SignupModal({ open, onClose, onSwitchToLogin }: SignupModalProps
                     className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md"
                   >
                     Go to Sign In <ArrowRight size={16} />
-                  </button>
+                  </button> */}
                 </div>
               ) : step === 1 ? (
                 <form onSubmit={handleStep1} className="space-y-5">
