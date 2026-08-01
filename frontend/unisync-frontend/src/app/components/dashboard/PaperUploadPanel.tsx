@@ -12,7 +12,7 @@ type UploadedPaper = {
   indexed: boolean;
 };
 
-export function PaperUploadPanel() {
+export function PaperUploadPanel({ onUploaded }: { onUploaded?: () => void } = {}) {
   const [title, setTitle] = useState("");
   const [authors, setAuthors] = useState("");
   const [url, setUrl] = useState("");
@@ -88,6 +88,7 @@ export function PaperUploadPanel() {
         setNotice(`"${res.paper.title}" was saved, but indexing failed — it won't show up in recommendations yet.`);
       }
       resetForm();
+      onUploaded?.();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {

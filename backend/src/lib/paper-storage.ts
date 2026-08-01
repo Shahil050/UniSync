@@ -14,3 +14,12 @@ export async function savePaperFile(paperId: string, file: File): Promise<string
 export async function readPaperFile(filePath: string): Promise<Buffer> {
   return fs.readFile(filePath);
 }
+
+export async function deletePaperFile(filePath: string | null): Promise<void> {
+  if (!filePath) return;
+  try {
+    await fs.unlink(filePath);
+  } catch {
+    // File already gone or never existed — nothing further to do.
+  }
+}
