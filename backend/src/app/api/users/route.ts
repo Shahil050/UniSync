@@ -15,7 +15,7 @@ export const GET = auth(async function GET(req) {
   const cursor = searchParams.get("cursor");
   const take = 24;
 
-  const where: any = { deletedAt: null, id: { not: userId } };
+  const where: any = { deletedAt: null, id: { not: userId }, role: "STUDENT" };
   if (search) where.fullName = { contains: search, mode: "insensitive" };
   if (department) where.department = department;
   if (skillCategory) {

@@ -45,6 +45,16 @@ export async function registerUserEmbedding(userId: string, interests: string[])
   });
 }
 
+export async function submitPaperPdf(postgresId: string, file: File): Promise<{ success: boolean }> {
+  const form = new FormData();
+  form.append("postgres_id", postgresId);
+  form.append("file", file, file.name);
+  return aiRequest(`/enter_pdf`, {
+    method: "POST",
+    body: form,
+  });
+}
+
 type UserMatch = { user_id: string; similarity_score: number; interests: string };
 
 export async function getSimilarUsers(userId: string): Promise<UserMatch[]> {
