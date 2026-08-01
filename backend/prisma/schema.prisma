@@ -119,6 +119,7 @@ model User {
   updatedAt          DateTime                 @updatedAt
   deletedAt          DateTime?
   emailVerified      DateTime?
+  lastLoginAt        DateTime?
   institutionId      String?                  @db.Uuid
   skillsUpdatedAt    DateTime?
 
@@ -504,4 +505,12 @@ model Notification {
 
   @@index([userId, isRead, createdAt])
   @@index([projectId])
+}
+
+model SystemSettings {
+  id                   String   @id @default("singleton")
+  sessionTimeoutMinutes Int     @default(43200) // 30 days, matches current SESSION_MAX_AGE
+  maxUploadSizeMB      Int      @default(20)
+  updatedAt            DateTime @updatedAt
+  updatedById          String?  @db.Uuid
 }

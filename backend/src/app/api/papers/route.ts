@@ -3,8 +3,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { submitPaperPdf, AiServiceError } from "@/lib/ai-service";
 import { savePaperFile } from "@/lib/paper-storage";
-
-const MAX_PDF_BYTES = 20 * 1024 * 1024; // 20MB
+import { getSystemSettings } from "@/lib/settings";
 
 export const POST = auth(async function POST(req) {
   if (!req.auth?.user?.id) {
@@ -39,8 +38,11 @@ export const POST = auth(async function POST(req) {
   if (pdf.type && pdf.type !== "application/pdf") {
     return NextResponse.json({ success: false, message: "File must be a PDF." }, { status: 400 });
   }
-  if (pdf.size > MAX_PDF_BYTES) {
-    return NextResponse.json({ success: false, message: "PDF must be under 20MB." }, { status: 400 });
+  const { maxUploadSizeMB } = await getSystemSettings();
+  const maxPdfBytes = maxUploadSizeMB * 1024 * 1024;
+
+  if (pdf.size > maxPdfBytes) {
+    return NextResponse.json({ success: false, message: `PDF must be under ${maxUploadSizeMB}MB.` }, { status: 400 });
   }
   if (url != null && typeof url !== "string") {
     return NextResponse.json({ success: false, message: "Invalid url." }, { status: 400 });
