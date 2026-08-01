@@ -160,12 +160,12 @@ export default function UsersPage() {
           <p className="text-slate-500 mt-1">Manage all registered users</p>
         </div>
 
-        <button
+        {/* <button
           onClick={openAddModal}
           className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
         >
           + Add User
-        </button>
+        </button> */}
       </div>
 
       <div className="bg-white rounded-xl border shadow-sm p-5 mb-6">
