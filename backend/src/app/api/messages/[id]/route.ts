@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { isValidUuid } from "@/lib/validate-uuid";
+import { deleteMessageFile } from "@/lib/message-storage";
 
 export const DELETE = auth(async function DELETE(req, { params }) {
   if (!req.auth?.user?.id) {
@@ -15,18 +16,16 @@ export const DELETE = auth(async function DELETE(req, { params }) {
 
   const userId = req.auth.user.id;
 
-  const result = await prisma.message.updateMany({
-    where: { id, senderId: userId, deletedAt: null },
-    data: { deletedAt: new Date() },
-  });
-
-  if (result.count === 0) {
-    const exists = await prisma.message.findUnique({ where: { id }, select: { deletedAt: true, senderId: true } });
-    if (!exists || exists.deletedAt) {
-      return NextResponse.json({ success: false, message: "Message not found." }, { status: 404 });
-    }
+  const existing = await prisma.message.findUnique({ where: { id } });
+  if (!existing || existing.deletedAt) {
+    return NextResponse.json({ success: false, message: "Message not found." }, { status: 404 });
+  }
+  if (existing.senderId !== userId) {
     return NextResponse.json({ success: false, message: "You can only delete your own messages." }, { status: 403 });
   }
+
+  await prisma.message.update({ where: { id }, data: { deletedAt: new Date() } });
+  await deleteMessageFile(existing.filePath);
 
   return NextResponse.json({ success: true, message: "Message deleted." });
 });

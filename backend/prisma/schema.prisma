@@ -446,6 +446,10 @@ model Message {
   senderId    String    @db.Uuid
   recipientId String?   @db.Uuid
   content     String
+  fileName    String?
+  filePath    String?
+  fileType    String?
+  fileSize    Int?
   createdAt   DateTime  @default(now())
   deletedAt   DateTime?
 

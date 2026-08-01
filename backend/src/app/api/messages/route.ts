@@ -3,28 +3,74 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { parseJson } from "@/lib/parse-json";
 import { isValidUuid } from "@/lib/validate-uuid";
+import { saveMessageFile } from "@/lib/message-storage";
+import { serializeMessage } from "@/lib/serialize-message";
+import { getSystemSettings } from "@/lib/settings";
 
 export const POST = auth(async function POST(req) {
   if (!req.auth?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  const { data: body, error } = await parseJson(req);
-  if (error) return error;
-
-  const { projectId, recipientId, content } = body;
   const senderId = req.auth.user.id;
 
-  if (!content || typeof content !== "string" || content.trim().length === 0) {
-    return NextResponse.json({ success: false, message: "content is required." }, { status: 400 });
+  let projectId: string | undefined;
+  let recipientId: string | undefined;
+  let content = "";
+  let file: File | null = null;
+
+  const contentType = req.headers.get("content-type") || "";
+
+  if (contentType.includes("multipart/form-data")) {
+    let form: FormData;
+    try {
+      form = await req.formData();
+    } catch {
+      return NextResponse.json(
+        { success: false, message: "Expected multipart/form-data." },
+        { status: 400 }
+      );
+    }
+
+    const pid = form.get("projectId");
+    const rid = form.get("recipientId");
+    const c = form.get("content");
+    const f = form.get("file");
+
+    projectId = typeof pid === "string" && pid ? pid : undefined;
+    recipientId = typeof rid === "string" && rid ? rid : undefined;
+    content = typeof c === "string" ? c : "";
+    if (f instanceof File && f.size > 0) file = f;
+  } else {
+    const { data: body, error } = await parseJson(req);
+    if (error) return error;
+
+    projectId = body.projectId;
+    recipientId = body.recipientId;
+    content = typeof body.content === "string" ? body.content : "";
+  }
+
+  if (!content.trim() && !file) {
+    return NextResponse.json(
+      { success: false, message: "Message must include text or a file." },
+      { status: 400 }
+    );
   }
 
   if (!!projectId === !!recipientId) {
-    // both set, or neither set
     return NextResponse.json(
       { success: false, message: "Provide exactly one of projectId or recipientId." },
       { status: 400 }
     );
+  }
+
+  if (file) {
+    const { maxUploadSizeMB } = await getSystemSettings();
+    if (file.size > maxUploadSizeMB * 1024 * 1024) {
+      return NextResponse.json(
+        { success: false, message: `File must be under ${maxUploadSizeMB}MB.` },
+        { status: 400 }
+      );
+    }
   }
 
   if (projectId) {
@@ -54,11 +100,12 @@ export const POST = auth(async function POST(req) {
       data: { projectId, senderId, content: content.trim() },
     });
 
-    return NextResponse.json({ success: true, message }, { status: 201 });
+    const final = file ? await attachFile(message.id, file) : message;
+    return NextResponse.json({ success: true, message: serializeMessage(final) }, { status: 201 });
   }
 
   // DM branch
-  if (!isValidUuid(recipientId)) {
+  if (!isValidUuid(recipientId!)) {
     return NextResponse.json({ success: false, message: "Invalid recipient ID." }, { status: 400 });
   }
 
@@ -78,5 +125,19 @@ export const POST = auth(async function POST(req) {
     data: { recipientId, senderId, content: content.trim() },
   });
 
-  return NextResponse.json({ success: true, message }, { status: 201 });
+  const final = file ? await attachFile(message.id, file) : message;
+  return NextResponse.json({ success: true, message: serializeMessage(final) }, { status: 201 });
 });
+
+async function attachFile(messageId: string, file: File) {
+  const filePath = await saveMessageFile(messageId, file);
+  return prisma.message.update({
+    where: { id: messageId },
+    data: {
+      filePath,
+      fileName: file.name,
+      fileType: file.type || null,
+      fileSize: file.size,
+    },
+  });
+}

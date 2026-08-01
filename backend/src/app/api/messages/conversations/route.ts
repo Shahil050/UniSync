@@ -33,7 +33,7 @@ export const GET = auth(async function GET(req) {
         name: project!.title,
         lastMessage: lastMessage
           ? {
-              content: lastMessage.content,
+              content: lastMessage.content || (lastMessage.fileName ? `📎 ${lastMessage.fileName}` : ""),
               createdAt: lastMessage.createdAt,
               senderName: lastMessage.sender.fullName,
               senderId: lastMessage.senderId,
@@ -71,7 +71,7 @@ export const GET = auth(async function GET(req) {
       name: otherParty.fullName,
       avatar: otherParty.profileImage,
       lastMessage: {
-        content: msg.content,
+        content: msg.content || (msg.fileName ? `📎 ${msg.fileName}` : ""),
         createdAt: msg.createdAt,
         senderName: msg.senderId === userId ? "You" : otherParty.fullName,
         senderId: msg.senderId,
