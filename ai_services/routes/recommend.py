@@ -5,10 +5,7 @@ from RAG_pipeline.vector_store import load_vector_index
 PAPERS_INDEX_PATH = "faiss_papers_index"
 
 def get_recommendations_by_query(user_query: str, top_n: int = 5) -> list[str]:
-    """
-    Queries FAISS using the user's semantic string query and returns 
-    the top N unique Postgres IDs (source).
-    """
+
     embeddings = get_embeddings()
     vectorstore = load_vector_index(embeddings, path=PAPERS_INDEX_PATH)
     

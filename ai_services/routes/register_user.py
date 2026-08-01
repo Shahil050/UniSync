@@ -3,9 +3,7 @@ from fastapi import APIRouter, HTTPException
 from RAG_pipeline.embeddings import get_embeddings
 from RAG_pipeline.vector_store import add_user_to_fiass
 
-
 router=APIRouter()
-
 
 @router.post("/register_user")
 async def register_user(profile: UserProfile):
