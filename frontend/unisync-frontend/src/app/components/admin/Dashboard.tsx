@@ -45,7 +45,6 @@ export default function Dashboard() {
     "AI paper recommendation generated",
     "New collaboration agreement signed",
     "Research project created",
-    "One post reported for moderation"
   ]);
 
 

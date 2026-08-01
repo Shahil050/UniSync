@@ -37,7 +37,7 @@ export function Footer() {
 
             <div className="flex items-center gap-2 mt-3 text-blue-300 text-sm">
               <MapPin size={14} />
-              <span>Pokhara, Gandaki Province, Nepal</span>
+              <span>sanepa,lalitpur Nepal</span>
             </div>
           </div>
 
@@ -51,9 +51,7 @@ export function Footer() {
               {[
                 { to: "/", label: "Home" },
                 { to: "/features", label: "Features" },
-                { to: "/discover", label: "Discover Peers" },
-                { to: "/dashboard", label: "Dashboard" },
-                { to: "/messages", label: "Messages" },
+                
               ].map((l) => (
                 <li key={l.to}>
                   <Link

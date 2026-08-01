@@ -207,21 +207,22 @@ export function DashboardPage() {
                 </div>
               </motion.div>
 
-              {/* Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {[
-                  { label: "Connections", value: "12", icon: <Users size={18} />, color: "blue" },
-                  { label: "Projects", value: "4", icon: <FileSignature size={18} />, color: "cyan" },
-                  { label: "Reputation", value: "4.8★", icon: <Trophy size={18} />, color: "blue" },
-                  { label: "Badges", value: "3", icon: <Zap size={18} />, color: "sky" },
-                ].map((s) => (
-                  <div key={s.label} className="bg-white rounded-2xl border border-blue-100 p-4 text-center shadow-sm">
-                    <div className="text-blue-600 flex justify-center mb-2">{s.icon}</div>
-                    <div className="text-xl font-black text-slate-800">{s.value}</div>
-                    <div className="text-slate-400 text-xs">{s.label}</div>
-                  </div>
-                ))}
-              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+  {[
+    { label: "Connections", value: "12", icon: <Users size={18} />, color: "blue" },
+    { label: "Projects", value: "4", icon: <FileSignature size={18} />, color: "cyan" },
+    { label: "Badges", value: "3", icon: <Zap size={18} />, color: "sky" },
+  ].map((s) => (
+    <div
+      key={s.label}
+      className="bg-white rounded-2xl border border-blue-100 p-4 text-center shadow-sm h-full"
+    >
+      <div className="text-blue-600 flex justify-center mb-2">{s.icon}</div>
+      <div className="text-xl font-black text-slate-800">{s.value}</div>
+      <div className="text-slate-400 text-xs">{s.label}</div>
+    </div>
+  ))}
+</div>
 
     
              <DeadlineReminders />
@@ -249,7 +250,7 @@ export function DashboardPage() {
             </div>
           </div>
         )}
-
+         
         {!isAdmin && activeTab === "profile" && <ProfileSection user={user} />}
         {!isAdmin && activeTab === "discover" && <DiscoverPeers />}
         {!isAdmin && activeTab === "ideas" && <IdeasFeed />}

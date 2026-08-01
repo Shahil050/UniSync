@@ -102,7 +102,7 @@ export function HeroSection({ onLoginClick, onSignupClick }: HeroProps) {
           </motion.div>
 
           {/* Stats */}
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.4 }}
@@ -117,7 +117,7 @@ export function HeroSection({ onLoginClick, onSignupClick }: HeroProps) {
                 </div>
               </div>
             ))}
-          </motion.div>
+          </motion.div> */}
         </div>
 
         {/* Right — Image card */}
@@ -190,7 +190,7 @@ export function HeroSection({ onLoginClick, onSignupClick }: HeroProps) {
         </motion.div>
       </div>
 
-      {/* Bottom wave */}
+      //Bottom wave
       <div className="absolute bottom-0 left-0 right-0">
         <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M0 80L1440 80L1440 20C1200 80 720 0 0 60V80Z" fill="white" />

@@ -31,7 +31,7 @@ export function ContactSection() {
           </span>
           <h2 className="text-4xl font-black text-slate-900 mb-4">Contact Us</h2>
           <p className="text-slate-500 max-w-xl mx-auto">
-            Have questions about UniSync? We'd love to hear from you. Reach out to our team at Pokhara University.
+            Have questions about UniSync? We'd love to hear from you. 
           </p>
         </motion.div>
 
@@ -47,7 +47,7 @@ export function ContactSection() {
               <h3 className="font-bold text-slate-800 text-lg mb-6">Contact Information</h3>
               {[
                 { icon: <Mail size={20} />, label: "Email", value: "unisync@pu.edu.np" },
-                { icon: <MapPin size={20} />, label: "Location", value: "Pokhara University, Lekhnath, Pokhara" },
+                { icon: <MapPin size={20} />, label: "Location", value: "Sanepa,Lalitpur" },
                 { icon: <Phone size={20} />, label: "Phone", value: "+977-61-504001" },
               ].map((c, i) => (
                 <div key={i} className="flex items-start gap-4 mb-5 last:mb-0">
@@ -63,7 +63,7 @@ export function ContactSection() {
             </div>
 
             <div className="bg-gradient-to-br from-blue-700 to-blue-900 rounded-2xl p-8 text-white">
-              <h3 className="font-bold text-lg mb-2">Join 2,400+ Students</h3>
+              
               <p className="text-blue-200 text-sm leading-relaxed">
                 Be part of a thriving academic community. Connect with peers, collaborate on projects, and build your professional portfolio.
               </p>

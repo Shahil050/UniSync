@@ -6,7 +6,7 @@ import Image from "next/image";
 import { X, Mail, Lock, Eye, EyeOff, User, Zap, ArrowRight, CheckCircle2, MailCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { authApi } from "@/src/lib/api/auth";
-import { ApiError } from "@/src/lib/api-client";
+import {ApiError } from "@/src/lib/api-client";
 
 type SignupModalProps = {
   open: boolean;
