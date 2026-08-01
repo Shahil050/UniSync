@@ -39,6 +39,16 @@ export const GET = auth(async function GET(req, { params }) {
           badge: { select: { id: true, name: true, description: true, iconUrl: true } },
         },
       },
+      penaltyTags: {
+        select: {
+          id: true,
+          projectId: true,
+          reason: true,
+          severity: true,
+          issuedAt: true,
+          resolvedAt: true,
+        },
+      },
     },
   });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
@@ -29,6 +29,9 @@ import { NotificationsPanel } from "../components/dashboard/NotificationsPanel";
 import { PaperUploadPanel } from "../components/dashboard/PaperUploadPanel";
 import { SearchBar } from "../components/shared/SearchBar";
 import { useUser } from "../UserContext";
+import { usersApi } from "@/src/lib/api/users";
+import { projectsApi } from "@/src/lib/api/projects";
+import { ApiError } from "@/src/lib/api-client";
 
 type Tab = "overview" | "profile" | "discover" | "ideas" | "agreements" | "messages" | "activity" | "notifications" | "upload-papers";
 
@@ -54,6 +57,29 @@ export function DashboardPage() {
   const initialTab = (searchParams.get("tab") as Tab) || "overview";
   const [activeTab, setActiveTab] = useState<Tab>(isAdmin ? "upload-papers" : initialTab);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [overviewStats, setOverviewStats] = useState({ projects: 0, badges: 0, penalties: 0 });
+
+  useEffect(() => {
+    if (isAdmin) return;
+    let cancelled = false;
+    Promise.all([usersApi.get(user.id), projectsApi.list({ userId: user.id })])
+      .then(([profileRes, projectsRes]) => {
+        if (cancelled) return;
+        setOverviewStats({
+          projects: projectsRes.projects.length,
+          badges: profileRes.user.badges.length,
+          penalties: profileRes.user.penaltyTags?.length ?? 0,
+        });
+      })
+      .catch((err) => {
+        // Overview stats are supplementary — fail quietly and keep zeros rather than blocking the page.
+        if (!(err instanceof ApiError)) console.error(err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, user.id]);
+
   return (
     <div className="min-h-screen bg-blue-50/50 pt-16">
       {/* Top bar */}
@@ -209,9 +235,9 @@ export function DashboardPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
   {[
-    { label: "Connections", value: "12", icon: <Users size={18} />, color: "blue" },
-    { label: "Projects", value: "4", icon: <FileSignature size={18} />, color: "cyan" },
-    { label: "Badges", value: "3", icon: <Zap size={18} />, color: "sky" },
+    { label: "Projects", value: String(overviewStats.projects), icon: <FileSignature size={18} />, color: "cyan" },
+    { label: "Badges", value: String(overviewStats.badges), icon: <Zap size={18} />, color: "sky" },
+    { label: "Penalties", value: String(overviewStats.penalties), icon: <Trophy size={18} />, color: "blue" },
   ].map((s) => (
     <div
       key={s.label}
