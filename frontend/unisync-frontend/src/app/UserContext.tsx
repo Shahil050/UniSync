@@ -8,13 +8,14 @@ export type AppUser = {
   name: string;
   email: string;
   avatar: string;
+  role: "STUDENT" | "ADMIN";
   isLoggedIn: boolean;
 };
 
 type UserContextType = {
   user: AppUser;
   checkingSession: boolean;
-  onLogin: (id: string, name: string, email: string) => void;
+  onLogin: (id: string, name: string, email: string, role: "STUDENT" | "ADMIN") => void;
   onLogout: () => void;
   loginOpen: boolean;
   signupOpen: boolean;
@@ -33,6 +34,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     name: "",
     email: "",
     avatar: DEFAULT_AVATAR,
+    role: "STUDENT",
     isLoggedIn: false,
   });
   const [checkingSession, setCheckingSession] = useState(true);
@@ -49,6 +51,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           name: res.user.name,
           email: res.user.email,
           avatar: DEFAULT_AVATAR,
+          role: res.user.role ?? "STUDENT",
           isLoggedIn: true,
         });
       })
@@ -57,8 +60,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
       .finally(() => setCheckingSession(false));
   }, []);
 
-  const onLogin = (id: string, name: string, email: string) => {
-    setUser((u) => ({ id, name, email, avatar: u.avatar, isLoggedIn: true }));
+  const onLogin = (id: string, name: string, email: string, role: "STUDENT" | "ADMIN") => {
+    setUser((u) => ({ id, name, email, avatar: u.avatar, role, isLoggedIn: true }));
   };
 
   const onLogout = () => {
