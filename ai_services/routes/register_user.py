@@ -3,9 +3,7 @@ from fastapi import APIRouter, HTTPException
 from RAG_pipeline.embeddings import get_embeddings
 from RAG_pipeline.vector_store import add_user_to_fiass
 
-
 router=APIRouter()
-
 
 @router.post("/register_user")
 async def register_user(profile: UserProfile):
@@ -16,7 +14,7 @@ async def register_user(profile: UserProfile):
         "message": f"User {profile.user_id} successfully added to FAISS vector index.",
         "user_id": profile.user_id
     }
-    # not reaching to return statement.
+    
 
 
 
