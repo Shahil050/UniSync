@@ -2,7 +2,7 @@
 
 import { Camera, LogOut } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface AdminProfileData {
   name: string;
@@ -15,13 +15,25 @@ interface AdminProfileData {
 export default function AdminProfile() {
 
   const [profile, setProfile] = useState<AdminProfileData>({
-    name: "Kajal Kushwaha",
-    email: "admin@unisync.com",
-    role: "Super Admin",
-    lastLogin: "August 1, 2026",
-    image: "/unisync-logo.png",
-  });
+  name: "",
+  email: "",
+  role: "",
+  lastLogin: "",
+  image: "/unisync-logo.png",
+});
 
+
+useEffect(() => {
+
+  const adminData = localStorage.getItem("adminProfile");
+
+  if(adminData){
+
+    setProfile(JSON.parse(adminData));
+
+  }
+
+}, []);
 
   const [password, setPassword] = useState({
     current:"",

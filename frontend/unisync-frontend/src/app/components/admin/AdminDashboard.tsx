@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
@@ -20,20 +21,20 @@ import {
 
 
 
-import Dashboard from "../components/admin/Dashboard";
-import UsersPage from "../components/admin/Users";
-import Papers from "../components/admin/Papers";
-import Moderation from "../components/admin/Moderation";
-import Analytics from "../components/admin/Analytics";
-import SettingsPage from "../components/admin/Settings";
-import Projects from "../components/admin/Projects";
-import Groups from "../components/admin/Groups";
-import Agreements from "../components/admin/Agreements";
-import Recommendations from "../components/admin/Recommendations";
-import Messages from "../components/admin/Messages";
-import Reports from "../components/admin/Reports";
-import Notifications from "../components/admin/Notifications";
-import AdminProfile from "../components/admin/AdminProfile";
+import Dashboard from "./Dashboard";
+import UsersPage from "./Users";
+import Papers from "./Papers";
+import Moderation from "./Moderation";
+import Analytics from "./Analytics";
+import SettingsPage from "./Settings";
+import Projects from "./Projects";
+import Groups from "./Groups";
+import Agreements from "./Agreements";
+import Recommendations from "./Recommendations";
+import Messages from "./Messages";
+import Reports from "./Reports";
+import Notifications from "./Notifications";
+import AdminProfile from "./AdminProfile";
 
 
 
@@ -53,9 +54,14 @@ type Tab =
   | "settings"
   | "profile";
 
-export function AdminDashboard() {
+export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
+  const router = useRouter();
 
+  const handleLogout = () => {
+    localStorage.removeItem("adminLoggedIn");
+    router.push("/admin/login");
+  };
   return (
     <div className="min-h-screen bg-slate-100 flex">
 
@@ -257,9 +263,16 @@ export function AdminDashboard() {
   <UserCog size={18}/>
   Admin Profile
 </button>
-
-
-        </div>
+<div className="mt-8 border-t border-slate-700 pt-6">
+  <button
+    onClick={handleLogout}
+    className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-semibold transition"
+  >
+    Logout
+  </button>
+</div>
+</div>
+       
       </aside>
 
       {/* Main Content */}
