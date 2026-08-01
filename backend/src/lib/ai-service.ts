@@ -34,7 +34,7 @@ export async function getPaperRecommendations(query: string): Promise<{
   recommended_postgres_ids: string[];
 }> {
   const qs = new URLSearchParams({ query }).toString();
-  return aiRequest(`/getpapers/recommend?${qs}`);
+  return aiRequest(`/recommend_paper/recommend?${qs}`);
 }
 
 export async function registerUserEmbedding(userId: string, interests: string[]) {
@@ -42,6 +42,16 @@ export async function registerUserEmbedding(userId: string, interests: string[])
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ user_id: userId, interest: interests }),
+  });
+}
+
+export async function submitPaperPdf(postgresId: string, file: File): Promise<{ success: boolean }> {
+  const form = new FormData();
+  form.append("postgres_id", postgresId);
+  form.append("file", file, file.name);
+  return aiRequest(`/enter_pdf`, {
+    method: "POST",
+    body: form,
   });
 }
 

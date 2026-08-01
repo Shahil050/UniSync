@@ -17,6 +17,7 @@ import {
   Zap,
   ChevronDown,
   LogOut,
+  Upload,
 } from "lucide-react";
 import { ProfileSection } from "../components/dashboard/ProfileSection";
 import { DiscoverPeers } from "../components/dashboard/DiscoverPeers";
@@ -25,10 +26,11 @@ import { AgreementsModule } from "../components/dashboard/AgreementsModule";
 import { MessagesModule } from "../components/dashboard/MessagesModule";
 import { ActivityLogs } from "../components/dashboard/ActivityLogs";
 import { NotificationsPanel } from "../components/dashboard/NotificationsPanel";
+import { PaperUploadPanel } from "../components/dashboard/PaperUploadPanel";
 import { SearchBar } from "../components/shared/SearchBar";
 import { useUser } from "../UserContext";
 
-type Tab = "overview" | "profile" | "discover" | "ideas" | "agreements" | "messages" | "activity" | "notifications";
+type Tab = "overview" | "profile" | "discover" | "ideas" | "agreements" | "messages" | "activity" | "notifications" | "upload-papers";
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "overview", label: "Overview", icon: <LayoutDashboard size={16} /> },
@@ -40,11 +42,17 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "notifications", label: "Notification", icon: <Bell size={16} /> },
 ];
 
+const ADMIN_TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  { id: "upload-papers", label: "Upload Papers", icon: <Upload size={16} /> },
+];
+
 export function DashboardPage() {
- const { user, onLogout } = useUser();
+  const { user, onLogout } = useUser();
+  const isAdmin = user.role === "ADMIN";
+  const tabs = isAdmin ? ADMIN_TABS : TABS;
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as Tab) || "overview";
-  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+  const [activeTab, setActiveTab] = useState<Tab>(isAdmin ? "upload-papers" : initialTab);
   const [profileOpen, setProfileOpen] = useState(false);
   return (
     <div className="min-h-screen bg-blue-50/50 pt-16">
@@ -113,15 +121,17 @@ export function DashboardPage() {
 
           <div className="p-4 space-y-2">
 
-            <button
-              onClick={() => {
-                setActiveTab("profile");
-                setProfileOpen(false);
-              }}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2.5 font-medium transition"
-            >
-              View Profile
-            </button>
+            {!isAdmin && (
+              <button
+                onClick={() => {
+                  setActiveTab("profile");
+                  setProfileOpen(false);
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2.5 font-medium transition"
+              >
+                View Profile
+              </button>
+            )}
 
             <button
               onClick={() => {
@@ -145,7 +155,7 @@ export function DashboardPage() {
 
           {/* Tab navigation */}
           <div className="flex overflow-x-auto gap-1 pb-0 scrollbar-hide">
-            {TABS.map((tab) => (
+            {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -165,7 +175,9 @@ export function DashboardPage() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        {activeTab === "overview" && (
+        {isAdmin && activeTab === "upload-papers" && <PaperUploadPanel />}
+
+        {!isAdmin && activeTab === "overview" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left column */}
             <div className="lg:col-span-2 space-y-6">
@@ -231,13 +243,14 @@ export function DashboardPage() {
           </div>
         )}
 
-        {activeTab === "profile" && <ProfileSection user={user} />}
-        {activeTab === "discover" && <DiscoverPeers />}
-        {activeTab === "ideas" && <IdeasFeed />}
-        {activeTab === "agreements" && <AgreementsModule />}
-        {activeTab === "messages" && <MessagesModule user={user} />}
-        {activeTab === "activity" && <ActivityLogs />}
-        {activeTab === "notifications" && <NotificationsPanel />}
+        {!isAdmin && activeTab === "profile" && <ProfileSection user={user} />}
+        {!isAdmin && activeTab === "discover" && <DiscoverPeers />}
+        {!isAdmin && activeTab === "ideas" && <IdeasFeed />}
+        {!isAdmin && activeTab === "agreements" && <AgreementsModule />}
+        {!isAdmin && activeTab === "messages" && <MessagesModule user={user} />}
+        {!isAdmin && activeTab === "activity" && <ActivityLogs />}
+        {!isAdmin && activeTab === "notifications" && <NotificationsPanel />}
+
       </div>
     </div>
   );

@@ -480,6 +480,7 @@ model Paper {
   title     String
   authors   String?
   url       String?
+  filePath  String?
   addedById String   @db.Uuid
   createdAt DateTime @default(now())
 

@@ -13,6 +13,7 @@ import { messagesApi } from "@/src/lib/api/messages";
 import { projectsApi } from "@/src/lib/api/projects";
 import { usersApi } from "@/src/lib/api/users";
 import { ApiError } from "@/src/lib/api-client";
+import { papersApi } from "@/src/lib/api/papers";
 
 // --- TYPES ---
 type Conversation = {
@@ -54,6 +55,8 @@ type MemberProfile = {
   linkedinUrl: string | null;
   profileImage: string | null;
 };
+
+type SuggestedPaper = { id: string; title: string; authors: string | null };
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -119,6 +122,7 @@ export function MessagesModule({ user }: { user: AppUser }) {
   // Project hub state (group conversations only)
   const [projectDetail, setProjectDetail] = useState<ProjectDetail | null>(null);
   const [resources, setResources] = useState<Resource[]>([]);
+  const [suggestedPapers, setSuggestedPapers] = useState<SuggestedPaper[]>([]);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
 
   // UI state
@@ -234,6 +238,11 @@ export function MessagesModule({ user }: { user: AppUser }) {
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not load project details.");
     }
+
+    papersApi
+      .recommendForProject(projectId)
+      .then((res) => setSuggestedPapers(res.papers ?? []))
+      .catch(() => setSuggestedPapers([]));
   }, [user.id]);
 
   useEffect(() => {
@@ -252,6 +261,7 @@ export function MessagesModule({ user }: { user: AppUser }) {
       setProjectDetail(null);
       setResources([]);
       setPendingRequests([]);
+      setSuggestedPapers([]);
     }
   }, [activeConvo, loadMessages, loadProjectHub]);
 
@@ -320,6 +330,21 @@ export function MessagesModule({ user }: { user: AppUser }) {
       setResources(res.resources);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not add resource.");
+    }
+  };
+
+  const handleAddSuggestedPaper = async (paper: SuggestedPaper) => {
+    if (!activeConvo) return;
+    try {
+      await projectsApi.addResource(activeConvo.id, {
+        title: paper.title,
+        type: "paper",
+        url: papersApi.fileUrl(paper.id),
+      });
+      const res = await projectsApi.listResources(activeConvo.id);
+      setResources(res.resources);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not add paper.");
     }
   };
 
@@ -640,6 +665,32 @@ export function MessagesModule({ user }: { user: AppUser }) {
               <h3 className="font-bold text-slate-800 text-base flex items-center gap-2"><FolderOpen size={20} className="text-blue-600" />Resources</h3>
               <button onClick={() => setShowResourcesModal(false)} className="text-slate-400 hover:text-slate-600 p-1"><X size={18} /></button>
             </div>
+
+            {suggestedPapers.length > 0 && (
+              <div className="mb-4">
+                <p className="text-xs font-bold text-slate-700 mb-2">Suggested Papers</p>
+                <div className="space-y-1.5">
+                  {suggestedPapers.map((p) => {
+                    const alreadyAdded = resources.some((r) => r.url === papersApi.fileUrl(p.id));
+                    return (
+                      <div key={p.id} className="flex items-center justify-between p-2 bg-blue-50/50 border border-blue-100 rounded-lg">
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-slate-800 truncate">{p.title}</p>
+                          {p.authors && <p className="text-[10px] text-slate-400 truncate">{p.authors}</p>}
+                        </div>
+                        <button
+                          onClick={() => handleAddSuggestedPaper(p)}
+                          disabled={alreadyAdded}
+                          className="text-[11px] font-bold px-2 py-1 rounded-lg flex-shrink-0 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:bg-slate-300"
+                        >
+                          {alreadyAdded ? "Added" : "Add"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="my-4 p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
               <p className="text-xs font-bold text-slate-700 flex items-center gap-1"><Plus size={14} className="text-blue-600" /> Add Resource</p>
