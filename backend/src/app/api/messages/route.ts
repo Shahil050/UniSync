@@ -6,6 +6,7 @@ import { isValidUuid } from "@/lib/validate-uuid";
 import { saveMessageFile } from "@/lib/message-storage";
 import { serializeMessage } from "@/lib/serialize-message";
 import { getSystemSettings } from "@/lib/settings";
+import { ResourceType } from "@/generated/prisma/enums";
 
 export const POST = auth(async function POST(req) {
   if (!req.auth?.user?.id) {
@@ -100,7 +101,7 @@ export const POST = auth(async function POST(req) {
       data: { projectId, senderId, content: content.trim() },
     });
 
-    const final = file ? await attachFile(message.id, file) : message;
+    const final = file ? await attachFile(message.id, senderId, projectId, file) : message;
     return NextResponse.json({ success: true, message: serializeMessage(final) }, { status: 201 });
   }
 
@@ -125,13 +126,13 @@ export const POST = auth(async function POST(req) {
     data: { recipientId, senderId, content: content.trim() },
   });
 
-  const final = file ? await attachFile(message.id, file) : message;
+  const final = file ? await attachFile(message.id, senderId, undefined, file) : message;
   return NextResponse.json({ success: true, message: serializeMessage(final) }, { status: 201 });
 });
 
-async function attachFile(messageId: string, file: File) {
+async function attachFile(messageId: string, senderId: string, projectId: string | undefined, file: File) {
   const filePath = await saveMessageFile(messageId, file);
-  return prisma.message.update({
+  const updated = await prisma.message.update({
     where: { id: messageId },
     data: {
       filePath,
@@ -140,4 +141,25 @@ async function attachFile(messageId: string, file: File) {
       fileSize: file.size,
     },
   });
+
+  // Group-chat attachments also show up in the project's Resources panel.
+  if (projectId) {
+    const resType: ResourceType = file.type?.startsWith("image/") ? "IMAGE" : "DOCUMENT";
+    const fileUrl = `${process.env.NEXTAUTH_URL}/api/messages/${messageId}/file`;
+    try {
+      await prisma.projectResource.create({
+        data: {
+          projectId,
+          title: file.name,
+          type: resType,
+          url: fileUrl,
+          addedById: senderId,
+        },
+      });
+    } catch {
+      // Resource creation is best-effort — the message itself already succeeded.
+    }
+  }
+
+  return updated;
 }

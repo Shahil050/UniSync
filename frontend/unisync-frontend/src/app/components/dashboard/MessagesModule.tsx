@@ -5,7 +5,7 @@ import {
   Send, Paperclip, Image as ImageIcon, Smile, Users, Github, Trello, FileText, ExternalLink, MoreVertical, File, X, Edit3,
   CheckCircle, User as UserIcon, Globe, UserPlus, Trash2, Crown, BellOff, Bell, Trash, LogOut, Info, ShieldAlert, FolderOpen,
   Plus, Download, Camera,
-  User,
+  User, AlertCircle,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import type { AppUser } from "../../UserContext";
@@ -31,6 +31,10 @@ export type Message = {
   text: string;
   time: string;
   isMine: boolean;
+  fileUrl: string | null;
+  fileName: string | null;
+  fileType: string | null;
+  fileSize: number | null;
 };
 
 type Member = { userId: string; role: string; user: { id: string; fullName: string; profileImage: string | null } };
@@ -142,6 +146,30 @@ export function MessagesModule({ user }: { user: AppUser }) {
   const [resUrl, setResUrl] = useState("");
   const [resType, setResType] = useState<"document" | "paper" | "link">("paper");
 
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [attachError, setAttachError] = useState("");
+  const [sending, setSending] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const MAX_ATTACHMENT_MB = 20;
+
+  const pickAttachment = (f: File | undefined | null) => {
+    if (!f) return;
+    if (f.size > MAX_ATTACHMENT_MB * 1024 * 1024) {
+      setAttachError(`File must be under ${MAX_ATTACHMENT_MB}MB.`);
+      return;
+    }
+    setAttachError("");
+    setAttachedFile(f);
+  };
+
+  const clearAttachment = () => {
+    setAttachedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -185,6 +213,10 @@ export function MessagesModule({ user }: { user: AppUser }) {
       text: raw.content,
       time: formatTime(raw.createdAt),
       isMine: raw.senderId === user.id,
+      fileUrl: raw.fileUrl ?? null,
+      fileName: raw.fileName ?? null,
+      fileType: raw.fileType ?? null,
+      fileSize: raw.fileSize ?? null,
     }),
     [user.id]
   );
@@ -287,21 +319,32 @@ export function MessagesModule({ user }: { user: AppUser }) {
 
   // --- MESSAGING ACTIONS ---
   const sendMessage = async () => {
-    if (!input.trim() || !activeConvo) return;
+    if ((!input.trim() && !attachedFile) || !activeConvo || sending) return;
     const content = input;
+    const file = attachedFile;
 
     setInput("");
     setShowEmojis(false);
+    clearAttachment();
+    setSending(true);
 
     try {
       await messagesApi.send(
-        activeConvo.type === "group" ? { projectId: activeConvo.id, content } : { recipientId: activeConvo.id, content }
+        activeConvo.type === "group"
+          ? { projectId: activeConvo.id, content, file }
+          : { recipientId: activeConvo.id, content, file }
       );
       await loadMessages(activeConvo);
       loadConversations();
+      if (file && activeConvo.type === "group") {
+        projectsApi.listResources(activeConvo.id).then((res) => setResources(res.resources)).catch(() => {});
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not send message.");
       setInput(content);
+      if (file) pickAttachment(file);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -497,9 +540,41 @@ export function MessagesModule({ user }: { user: AppUser }) {
                   {!msg.isMine && <UserAvatar name={msg.senderName} src={msg.avatar} size="sm" />}
                   <div className={`max-w-[70%] ${msg.isMine ? "items-end" : "items-start"} flex flex-col`}>
                     {!msg.isMine && <span className="text-[11px] text-slate-500 mb-1 ml-1 font-medium">{msg.senderName}</span>}
-                    <div className={`px-4 py-2.5 rounded-2xl text-sm shadow-sm ${msg.isMine ? "bg-blue-600 text-white rounded-br-none" : "bg-white text-slate-800 border border-slate-200 rounded-bl-none"}`}>
-                      {msg.text}
-                    </div>
+
+                    {msg.fileUrl && (
+                      msg.fileType?.startsWith("image/") ? (
+                        <a href={msg.fileUrl} target="_blank" rel="noreferrer" className="block mb-1 max-w-[220px] rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+                          <img src={msg.fileUrl} alt={msg.fileName ?? "attachment"} className="w-full h-auto object-cover" />
+                        </a>
+                      ) : (
+                        <a
+                          href={msg.fileUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={`flex items-center gap-2.5 mb-1 px-3.5 py-2.5 rounded-2xl border shadow-sm min-w-0 ${
+                            msg.isMine ? "bg-blue-500/90 border-blue-400 text-white" : "bg-white border-slate-200 text-slate-800"
+                          }`}
+                        >
+                          <File size={18} className={msg.isMine ? "text-white flex-shrink-0" : "text-blue-600 flex-shrink-0"} />
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium truncate max-w-[160px]">{msg.fileName ?? "Attachment"}</p>
+                            {typeof msg.fileSize === "number" && (
+                              <p className={`text-[10px] ${msg.isMine ? "text-blue-100" : "text-slate-400"}`}>
+                                {(msg.fileSize / 1024 / 1024).toFixed(1)} MB
+                              </p>
+                            )}
+                          </div>
+                          <Download size={14} className={`flex-shrink-0 ${msg.isMine ? "text-white" : "text-slate-400"}`} />
+                        </a>
+                      )
+                    )}
+
+                    {msg.text && (
+                      <div className={`px-4 py-2.5 rounded-2xl text-sm shadow-sm ${msg.isMine ? "bg-blue-600 text-white rounded-br-none" : "bg-white text-slate-800 border border-slate-200 rounded-bl-none"}`}>
+                        {msg.text}
+                      </div>
+                    )}
+
                     <span className="text-[10px] text-slate-400 mt-1 mx-1">{msg.time}</span>
                   </div>
                 </div>
@@ -508,6 +583,45 @@ export function MessagesModule({ user }: { user: AppUser }) {
             </div>
 
             <div className="px-5 py-3 bg-white border-t border-slate-200 relative">
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={(e) => { pickAttachment(e.target.files?.[0]); e.target.value = ""; }}
+              />
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => { pickAttachment(e.target.files?.[0]); e.target.value = ""; }}
+              />
+
+              {attachError && (
+                <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs">
+                  <AlertCircle size={14} className="flex-shrink-0" />
+                  <span>{attachError}</span>
+                </div>
+              )}
+
+              {attachedFile && (
+                <div className="flex items-center gap-2.5 mb-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-xl">
+                  {attachedFile.type.startsWith("image/") ? (
+                    <ImageIcon size={16} className="text-blue-600 flex-shrink-0" />
+                  ) : (
+                    <File size={16} className="text-blue-600 flex-shrink-0" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-slate-800 truncate">{attachedFile.name}</p>
+                    <p className="text-[10px] text-slate-400">{(attachedFile.size / 1024 / 1024).toFixed(1)} MB</p>
+                  </div>
+                  <button onClick={clearAttachment} className="p-1 text-slate-400 hover:text-red-500 flex-shrink-0">
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
+
+
               {showEmojis && (
                 <div className="absolute bottom-16 left-6 bg-white border border-slate-200 shadow-xl rounded-xl p-2 flex gap-2 z-20">
                   {["👍", "🚀", "🔥", "✅", "💡", "🎉", "❤️"].map((emoji) => (
@@ -519,10 +633,10 @@ export function MessagesModule({ user }: { user: AppUser }) {
               )}
               <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 p-1.5 rounded-xl">
                 <div className="flex items-center">
-                  <button disabled className="p-2 text-slate-300 rounded-lg cursor-not-allowed" title="File attachments coming soon">
+                  <button onClick={() => fileInputRef.current?.click()} className="p-2 text-slate-400 hover:text-blue-600 rounded-lg" title="Attach a file">
                     <Paperclip size={18} />
                   </button>
-                  <button disabled className="p-2 text-slate-300 rounded-lg cursor-not-allowed" title="Image uploads coming soon">
+                  <button onClick={() => imageInputRef.current?.click()} className="p-2 text-slate-400 hover:text-blue-600 rounded-lg" title="Attach an image">
                     <ImageIcon size={18} />
                   </button>
                   <button onClick={() => setShowEmojis(!showEmojis)} className="p-2 text-slate-400 hover:text-amber-500 rounded-lg">
@@ -537,8 +651,8 @@ export function MessagesModule({ user }: { user: AppUser }) {
                   placeholder="Type your message..."
                   className="flex-1 bg-transparent px-2 py-1.5 text-sm focus:outline-none text-slate-800"
                 />
-                <button onClick={sendMessage} disabled={!input.trim()} className="p-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-40">
-                  <Send size={16} />
+                <button onClick={sendMessage} disabled={(!input.trim() && !attachedFile) || sending} className="p-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-40">
+                  {sending ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin block" /> : <Send size={16} />}
                 </button>
               </div>
             </div>
