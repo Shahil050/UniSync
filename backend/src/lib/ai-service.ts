@@ -34,7 +34,7 @@ export async function getPaperRecommendations(query: string): Promise<{
   recommended_postgres_ids: string[];
 }> {
   const qs = new URLSearchParams({ query }).toString();
-  return aiRequest(`/getpapers/recommend?${qs}`);
+  return aiRequest(`/recommend_paper/recommend?${qs}`);
 }
 
 export async function registerUserEmbedding(userId: string, interests: string[]) {
