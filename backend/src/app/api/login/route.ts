@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { encode } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
-import { SESSION_COOKIE_NAME, SESSION_MAX_AGE } from "@/auth";
+import { SESSION_COOKIE_NAME } from "@/auth";
+import { getSystemSettings } from "@/lib/settings";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -42,6 +43,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const { sessionTimeoutMinutes } = await getSystemSettings();
+  const maxAgeSeconds = sessionTimeoutMinutes * 60;
+
+  await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+
   const token = await encode({
     token: {
       sub: user.id,
@@ -52,7 +58,7 @@ export async function POST(req: NextRequest) {
     },
     secret: process.env.AUTH_SECRET!,
     salt: SESSION_COOKIE_NAME,
-    maxAge: SESSION_MAX_AGE,
+    maxAge: maxAgeSeconds,
   });
 
   const response = NextResponse.json({
@@ -70,7 +76,7 @@ export async function POST(req: NextRequest) {
     secure: isProd,
     sameSite: isProd ? "none" : "lax",
     path: "/",
-    maxAge: SESSION_MAX_AGE,
+    maxAge: maxAgeSeconds,
   });
 
   return response;

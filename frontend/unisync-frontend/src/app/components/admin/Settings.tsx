@@ -1,706 +1,113 @@
 "use client";
 
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
+import { adminSettingsApi } from "@/src/lib/api/admin-settings";
+import { ApiError } from "@/src/lib/api-client";
 
 export default function SettingsPage() {
-
-
-const [saved,setSaved]=useState(false);
-
-
-
-const [settings,setSettings]=useState({
-
-platformName:"UniSync",
-university:"Pokhara University",
-email:"support@unisync.com",
-version:"Version 1.0",
-
-threshold:"0.75",
-recommendationLimit:"10",
-enableAI:true,
-
-uploadSize:"20 MB",
-fileTypes:".pdf",
-autoApprove:true,
-
-reportThreshold:"5",
-aiModeration:true,
-
-emailNotification:true,
-pushNotification:true,
-systemAlerts:true,
-
-sessionTimeout:"30 Minutes",
-twoFactor:true
-
-});
-
-
-
-
-
-
-
-
-const updateField=(key:string,value:any)=>{
-
-
-setSettings(prev=>({
-
-...prev,
-
-[key]:value
-
-}));
-
-
-};
-
-
-
-
-
-
-
-const handleSave=()=>{
-
-
-console.log("Settings Saved:",settings);
-
-
-setSaved(true);
-
-
-setTimeout(()=>{
-
-setSaved(false);
-
-},3000);
-
-
-};
-
-
-
-
-
-
-
-
-
-return (
-<div>
-
-
-
-<div className="mb-8">
-
-<h1 className="text-3xl font-bold text-slate-800">
-System Settings
-</h1>
-
-
-<p className="text-slate-500 mt-2">
-Configure UniSync platform settings.
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-
-<div className="space-y-6">
-
-
-
-
-
-
-
-<div className="bg-white rounded-xl border shadow-sm p-6">
-
-
-<h2 className="text-xl font-semibold mb-5">
-General Settings
-</h2>
-
-
-
-
-<div className="grid md:grid-cols-2 gap-5">
-
-
-
-{
-[
-["Platform Name","platformName"],
-["University","university"],
-["Support Email","email"],
-["Version","version"]
-
-].map(([label,key])=>(
-
-
-<div key={key}>
-
-
-<label className="block mb-2 font-medium">
-{label}
-</label>
-
-
-
-<input
-
-className="w-full border rounded-lg px-4 py-2"
-
-value={(settings as any)[key]}
-
-onChange={
-e=>updateField(
-key,
-e.target.value
-)
-}
-
-/>
-
-
-</div>
-
-
-))
-
-}
-
-
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<div className="bg-white rounded-xl border shadow-sm p-6">
-
-
-<h2 className="text-xl font-semibold mb-5">
-AI Recommendation
-</h2>
-
-
-
-<div className="grid md:grid-cols-2 gap-5">
-
-
-
-<div>
-
-<label className="block mb-2 font-medium">
-Similarity Threshold
-</label>
-
-
-<input
-
-type="number"
-
-value={settings.threshold}
-
-onChange={
-e=>updateField(
-"threshold",
-e.target.value
-)
-}
-
-className="w-full border rounded-lg px-4 py-2"
-
-/>
-
-
-</div>
-
-
-
-
-
-<div>
-
-<label className="block mb-2 font-medium">
-Recommendation Limit
-</label>
-
-
-<input
-
-type="number"
-
-value={settings.recommendationLimit}
-
-onChange={
-e=>updateField(
-"recommendationLimit",
-e.target.value
-)
-}
-
-className="w-full border rounded-lg px-4 py-2"
-
-/>
-
-
-</div>
-
-
-
-
-
-
-<div className="flex items-center gap-3">
-
-
-<input
-
-type="checkbox"
-
-checked={settings.enableAI}
-
-onChange={
-e=>updateField(
-"enableAI",
-e.target.checked
-)
-}
-
-/>
-
-
-<label>
-Enable AI Recommendation
-</label>
-
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<div className="bg-white rounded-xl border shadow-sm p-6">
-
-
-<h2 className="text-xl font-semibold mb-5">
-Research Paper Settings
-</h2>
-
-
-
-<div className="grid md:grid-cols-2 gap-5">
-
-
-
-<div>
-
-<label className="block mb-2 font-medium">
-Maximum Upload Size
-</label>
-
-
-<input
-
-value={settings.uploadSize}
-
-onChange={
-e=>updateField(
-"uploadSize",
-e.target.value
-)
-}
-
-className="w-full border rounded-lg px-4 py-2"
-
-/>
-
-
-</div>
-
-
-
-
-
-<div>
-
-<label className="block mb-2 font-medium">
-Allowed File Types
-</label>
-
-
-<input
-
-value={settings.fileTypes}
-
-onChange={
-e=>updateField(
-"fileTypes",
-e.target.value
-)
-}
-
-className="w-full border rounded-lg px-4 py-2"
-
-/>
-
-
-</div>
-
-
-
-
-
-<div className="flex items-center gap-3">
-
-
-<input
-
-type="checkbox"
-
-checked={settings.autoApprove}
-
-onChange={
-e=>updateField(
-"autoApprove",
-e.target.checked
-)
-}
-
-/>
-
-
-<label>
-Auto Approve Papers
-</label>
-
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<div className="bg-white rounded-xl border shadow-sm p-6">
-
-
-<h2 className="text-xl font-semibold mb-5">
-Content Moderation
-</h2>
-
-
-
-<div className="grid md:grid-cols-2 gap-5">
-
-
-
-<div>
-
-<label className="block mb-2 font-medium">
-Report Threshold
-</label>
-
-
-<input
-
-type="number"
-
-value={settings.reportThreshold}
-
-onChange={
-e=>updateField(
-"reportThreshold",
-e.target.value
-)
-}
-
-className="w-full border rounded-lg px-4 py-2"
-
-/>
-
-
-</div>
-
-
-
-
-
-<div className="flex items-center gap-3">
-
-
-<input
-
-type="checkbox"
-
-checked={settings.aiModeration}
-
-onChange={
-e=>updateField(
-"aiModeration",
-e.target.checked
-)
-}
-
-/>
-
-
-<label>
-Enable AI Moderation
-</label>
-
-
-</div>
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<div className="bg-white rounded-xl border shadow-sm p-6">
-
-
-<h2 className="text-xl font-semibold mb-5">
-Notification Settings
-</h2>
-
-
-
-<div className="space-y-4">
-
-
-
-{
-[
-["Email Notifications","emailNotification"],
-["Push Notifications","pushNotification"],
-["System Alerts","systemAlerts"]
-
-].map(([label,key])=>(
-
-
-<div
-key={key}
-className="flex items-center gap-3"
->
-
-
-<input
-
-type="checkbox"
-
-checked={(settings as any)[key]}
-
-onChange={
-e=>updateField(
-key,
-e.target.checked
-)
-}
-
-/>
-
-
-<label>
-{label}
-</label>
-
-
-</div>
-
-
-))
-
-}
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<div className="bg-white rounded-xl border shadow-sm p-6">
-
-
-<h2 className="text-xl font-semibold mb-5">
-Security
-</h2>
-
-
-
-<div className="grid md:grid-cols-2 gap-5">
-
-
-
-<div>
-
-<label className="block mb-2 font-medium">
-Session Timeout
-</label>
-
-
-<input
-
-value={settings.sessionTimeout}
-
-onChange={
-e=>updateField(
-"sessionTimeout",
-e.target.value
-)
-}
-
-className="w-full border rounded-lg px-4 py-2"
-
-/>
-
-
-</div>
-
-
-
-
-
-<div className="flex items-center gap-3">
-
-
-<input
-
-type="checkbox"
-
-checked={settings.twoFactor}
-
-onChange={
-e=>updateField(
-"twoFactor",
-e.target.checked
-)
-}
-
-/>
-
-
-<label>
-Enable Two Factor Authentication
-</label>
-
-
-</div>
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<div className="flex justify-end items-center gap-5">
-
-
-{
-saved &&
-
-<span className="text-green-600 font-semibold">
-Settings Saved Successfully
-</span>
-
-}
-
-
-
-<button
-
-onClick={handleSave}
-
-className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
-
->
-
-Save Changes
-
-</button>
-
-
-
-</div>
-
-
-
-
-
-
-</div>
-
-
-</div>
-);
-
+  const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState(43200);
+  const [maxUploadSizeMB, setMaxUploadSizeMB] = useState(20);
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    adminSettingsApi
+      .get()
+      .then((res) => {
+        setSessionTimeoutMinutes(res.settings.sessionTimeoutMinutes);
+        setMaxUploadSizeMB(res.settings.maxUploadSizeMB);
+      })
+      .catch((err) => setError(err instanceof ApiError ? err.message : "Failed to load settings."))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleSave = async () => {
+    setError("");
+    setSaving(true);
+    try {
+      await adminSettingsApi.update({ sessionTimeoutMinutes, maxUploadSizeMB });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to save settings.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-800">System Settings</h1>
+        <p className="text-slate-500 mt-2">
+          Only settings that actually affect platform behavior are listed here.
+        </p>
+      </div>
+
+      {loading ? (
+        <p className="text-slate-500">Loading...</p>
+      ) : (
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl border shadow-sm p-6">
+            <h2 className="text-xl font-semibold mb-1">Session</h2>
+            <p className="text-sm text-slate-500 mb-5">
+              Applies to every new login going forward. Existing sessions keep their original expiry.
+            </p>
+
+            <div className="max-w-xs">
+              <label className="block mb-2 font-medium">Session Timeout (minutes)</label>
+              <input
+                type="number"
+                min={5}
+                max={129600}
+                value={sessionTimeoutMinutes}
+                onChange={(e) => setSessionTimeoutMinutes(Number(e.target.value))}
+                className="w-full border rounded-lg px-4 py-2"
+              />
+              <p className="text-xs text-slate-400 mt-1">
+                {(sessionTimeoutMinutes / 60 / 24).toFixed(1)} days
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border shadow-sm p-6">
+            <h2 className="text-xl font-semibold mb-1">Research Paper Uploads</h2>
+            <p className="text-sm text-slate-500 mb-5">
+              Only PDF is supported end-to-end (storage and AI indexing both assume PDF) —
+              file type isn't configurable.
+            </p>
+
+            <div className="max-w-xs">
+              <label className="block mb-2 font-medium">Maximum Upload Size (MB)</label>
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={maxUploadSizeMB}
+                onChange={(e) => setMaxUploadSizeMB(Number(e.target.value))}
+                className="w-full border rounded-lg px-4 py-2"
+              />
+            </div>
+          </div>
+
+          {error && <p className="text-red-600">{error}</p>}
+
+          <div className="flex justify-end items-center gap-5">
+            {saved && <span className="text-green-600 font-semibold">Settings Saved Successfully</span>}
+
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold disabled:opacity-60"
+            >
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

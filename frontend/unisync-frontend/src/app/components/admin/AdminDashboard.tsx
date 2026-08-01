@@ -43,7 +43,7 @@ type Tab =
   | "agreements"
   | "messages"
   | "papers"
-  // | "settings"
+  | "settings"
   | "profile";
 
 export default function AdminDashboard() {
@@ -152,7 +152,7 @@ export default function AdminDashboard() {
             Messages
           </button>
 
-          {/* <button
+          <button
             onClick={() => setActiveTab("settings")}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg ${
               activeTab === "settings"
@@ -162,7 +162,7 @@ export default function AdminDashboard() {
           >
             <Settings size={18} />
             Settings
-          </button> */}
+          </button>
 
           <button
             onClick={() => setActiveTab("profile")}
@@ -193,7 +193,7 @@ export default function AdminDashboard() {
         {activeTab === "users" && <UsersPage />}
         {activeTab === "projects" && <Projects />}
         {activeTab === "papers" && <Papers />}
-        {/* {activeTab === "settings" && <SettingsPage />} */}
+        {activeTab === "settings" && <SettingsPage />}
         {activeTab === "agreements" && <Agreements />}
         {activeTab === "messages" && <Messages />}
         {activeTab === "profile" && <AdminProfile />}
