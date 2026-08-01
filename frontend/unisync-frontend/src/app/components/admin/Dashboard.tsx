@@ -5,10 +5,7 @@ import {
   FolderKanban,
   FileText,
   MessageCircle,
-  ShieldAlert,
-  UserCheck,
   FileSignature,
-  GraduationCap,
   RefreshCcw,
 } from "lucide-react";
 
@@ -21,10 +18,7 @@ interface DashboardData {
   projects:number;
   researchPapers:number;
   messages:number;
-  reportedPosts:number;
-  activeUsers:number;
   agreements:number;
-  researchers:number;
 }
 
 
@@ -41,10 +35,7 @@ export default function Dashboard() {
     projects:35,
     researchPapers:82,
     messages:247,
-    reportedPosts:4,
-    activeUsers:96,
     agreements:21,
-    researchers:47
   });
 
 
@@ -106,17 +97,8 @@ export default function Dashboard() {
         messages:
         Math.floor(Math.random()*300)+100,
 
-        reportedPosts:
-        Math.floor(Math.random()*10),
-
-        activeUsers:
-        Math.floor(Math.random()*100)+50,
-
         agreements:
         Math.floor(Math.random()*40)+10,
-
-        researchers:
-        Math.floor(Math.random()*70)+20
 
       });
 
@@ -249,36 +231,11 @@ export default function Dashboard() {
           color="bg-cyan-100 text-cyan-700"
         />
 
-
-        <StatCard
-          title="Reported Posts"
-          value={data.reportedPosts}
-          icon={<ShieldAlert size={28}/>}
-          color="bg-red-100 text-red-700"
-        />
-
-
-        <StatCard
-          title="Active Users"
-          value={data.activeUsers}
-          icon={<UserCheck size={28}/>}
-          color="bg-orange-100 text-orange-700"
-        />
-
-
         <StatCard
           title="Agreements"
           value={data.agreements}
           icon={<FileSignature size={28}/>}
           color="bg-indigo-100 text-indigo-700"
-        />
-
-
-        <StatCard
-          title="Researchers"
-          value={data.researchers}
-          icon={<GraduationCap size={28}/>}
-          color="bg-pink-100 text-pink-700"
         />
 
 

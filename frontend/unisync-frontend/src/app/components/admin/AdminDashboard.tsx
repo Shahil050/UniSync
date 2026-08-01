@@ -1,4 +1,5 @@
 "use client";
+
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -18,8 +19,7 @@ import {
   Bell,
   UserCog,
 } from "lucide-react";
-
-
+import { authApi } from "@/src/lib/api/auth";
 
 import Dashboard from "./Dashboard";
 import UsersPage from "./Users";
@@ -30,10 +30,8 @@ import SettingsPage from "./Settings";
 import Projects from "./Projects";
 import Groups from "./Groups";
 import Agreements from "./Agreements";
-import Recommendations from "./Recommendations";
 import Messages from "./Messages";
 import Reports from "./Reports";
-import Notifications from "./Notifications";
 import AdminProfile from "./AdminProfile";
 
 
@@ -44,10 +42,8 @@ type Tab =
   | "projects"
   | "groups"
   | "agreements"
-  | "recommendations"
   | "messages"
   | "reports"
-  | "notifications"
   | "papers"
   | "moderation"
   | "analytics"
@@ -58,8 +54,9 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminLoggedIn");
+  const handleLogout = async () => {
+    await authApi.logout();
+    localStorage.removeItem("adminProfile");
     router.push("/admin/login");
   };
   return (
@@ -163,18 +160,6 @@ export default function AdminDashboard() {
 </button>
 
 <button
-  onClick={() => setActiveTab("recommendations")}
-  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg ${
-    activeTab === "recommendations"
-      ? "bg-blue-600"
-      : "hover:bg-slate-800"
-  }`}
->
-  <Sparkles size={18} />
-  Recommendations
-</button>
-
-<button
   onClick={() => setActiveTab("messages")}
   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg ${
     activeTab === "messages"
@@ -197,22 +182,6 @@ export default function AdminDashboard() {
   <Flag size={18} />
   Reports
 </button>
-
-<button
-  onClick={() => setActiveTab("notifications")}
-  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg ${
-    activeTab === "notifications"
-      ? "bg-blue-600"
-      : "hover:bg-slate-800"
-  }`}
->
-  <Bell size={18} />
-  Notifications
-</button>
-
-
-
-
 
 
 
@@ -294,10 +263,8 @@ export default function AdminDashboard() {
 {activeTab === "settings" && <SettingsPage />}
 {activeTab === "groups" && <Groups />}
 {activeTab === "agreements" && <Agreements />}
-{activeTab === "recommendations" && <Recommendations />}
 {activeTab === "messages" && <Messages />}
 {activeTab === "reports" && <Reports />}
-{activeTab === "notifications" && <Notifications />}
 {activeTab === "profile" && <AdminProfile />}
 
 
