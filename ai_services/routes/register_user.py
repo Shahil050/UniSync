@@ -16,7 +16,7 @@ async def register_user(profile: UserProfile):
         "message": f"User {profile.user_id} successfully added to FAISS vector index.",
         "user_id": profile.user_id
     }
-    # not reaching to return statement.
+    
 
 
 
