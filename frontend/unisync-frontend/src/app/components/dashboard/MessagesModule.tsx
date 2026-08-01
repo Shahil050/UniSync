@@ -45,6 +45,7 @@ type Resource = { id: string; title: string; type: string; url: string; addedBy:
 type ProjectDetail = {
   id: string;
   ownerId: string;
+  status: "OPEN" | "IN_PROGRESS" | "COMPLETED" | "ABANDONED";
   githubUrl: string | null;
   boardUrl: string | null;
   docsUrl: string | null;
@@ -137,6 +138,7 @@ export function MessagesModule({ user }: { user: AppUser }) {
   const [showEditLinksModal, setShowEditLinksModal] = useState(false);
   const [showEmojis, setShowEmojis] = useState(false);
   const [selectedMember, setSelectedMember] = useState<MemberProfile | null>(null);
+  const [startingProject, setStartingProject] = useState(false);
 
   const [githubInput, setGithubInput] = useState("");
   const [boardInput, setBoardInput] = useState("");
@@ -433,6 +435,20 @@ export function MessagesModule({ user }: { user: AppUser }) {
     }
   };
 
+  const handleStartProject = async () => {
+    if (!activeConvo) return;
+    if (!confirm("Start this project? The agreement will become visible to members and they'll be notified to sign it.")) return;
+    setStartingProject(true);
+    try {
+      await projectsApi.start(activeConvo.id);
+      await loadProjectHub(activeConvo.id);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not start project.");
+    } finally {
+      setStartingProject(false);
+    }
+  };
+
   const openMemberProfile = async (userId: string) => {
     try {
       const res = await usersApi.get(userId);
@@ -510,7 +526,25 @@ export function MessagesModule({ user }: { user: AppUser }) {
                 </div>
               </div>
 
-              {activeConvo.type === "group" && (
+              <div className="flex items-center gap-2">
+                {activeConvo.type === "group" && isOwner && projectDetail?.status === "OPEN" && (
+                  <button
+                    onClick={handleStartProject}
+                    disabled={startingProject}
+                    className="flex items-center gap-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 px-3 py-1.5 rounded-xl transition-colors"
+                    title="Officially start the project — this unlocks the agreement for members and notifies them to sign"
+                  >
+                    <CheckCircle size={14} />
+                    {startingProject ? "Starting..." : "Start Project"}
+                  </button>
+                )}
+                {activeConvo.type === "group" && projectDetail?.status === "IN_PROGRESS" && (
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-xl">
+                    <CheckCircle size={14} />
+                    In Progress
+                  </span>
+                )}
+                {activeConvo.type === "group" && (
                 <div className="relative" ref={menuRef}>
                   <button onClick={() => setShowThreeDotsMenu(!showThreeDotsMenu)} className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors">
                     <MoreVertical size={18} />
@@ -527,7 +561,8 @@ export function MessagesModule({ user }: { user: AppUser }) {
                     </div>
                   )}
                 </div>
-              )}
+                )}
+              </div>
             </div>
 
             {error && <div className="px-6 py-2 bg-red-50 text-red-600 text-xs border-b border-red-100">{error}</div>}

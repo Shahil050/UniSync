@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Bell, Users, FileSignature, Award, AlertTriangle, MessageCircle, Star, X, Check, UserMinus } from "lucide-react";
 import { notificationsApi } from "@/src/lib/api/notifications";
+import { projectsApi } from "@/src/lib/api/projects";
 import { ApiError } from "@/src/lib/api-client";
 
 type NotificationType =
@@ -11,6 +12,7 @@ type NotificationType =
   | "MEMBERSHIP_ACCEPTED"
   | "MEMBERSHIP_REJECTED"
   | "MEMBER_REMOVED"
+  | "PROJECT_STARTED"
   | "CONTRACT_SIGNED"
   | "CONTRACT_ACTIVATED"
   | "BADGE_AWARDED"
@@ -22,6 +24,8 @@ type Notification = {
   message: string;
   isRead: boolean;
   createdAt: string;
+  projectId: string | null;
+  relatedUserId: string | null;
 };
 
 const typeConfig: Record<NotificationType, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
@@ -29,6 +33,7 @@ const typeConfig: Record<NotificationType, { label: string; icon: React.ReactNod
   MEMBERSHIP_ACCEPTED: { label: "Request Accepted", icon: <Users size={15} />, color: "text-green-600", bg: "bg-green-100" },
   MEMBERSHIP_REJECTED: { label: "Request Declined", icon: <Users size={15} />, color: "text-slate-500", bg: "bg-slate-100" },
   MEMBER_REMOVED: { label: "Removed from Project", icon: <UserMinus size={15} />, color: "text-red-600", bg: "bg-red-100" },
+  PROJECT_STARTED: { label: "Project Started", icon: <FileSignature size={15} />, color: "text-blue-700", bg: "bg-blue-100" },
   CONTRACT_SIGNED: { label: "Agreement Signed", icon: <FileSignature size={15} />, color: "text-blue-700", bg: "bg-blue-100" },
   CONTRACT_ACTIVATED: { label: "Agreement Active", icon: <FileSignature size={15} />, color: "text-green-700", bg: "bg-green-100" },
   BADGE_AWARDED: { label: "Badge Unlocked!", icon: <Award size={15} />, color: "text-amber-600", bg: "bg-amber-100" },
@@ -50,6 +55,7 @@ export function NotificationsPanel() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [respondingId, setRespondingId] = useState<string | null>(null);
   
   const load = useCallback(async () => {
     try {
@@ -93,6 +99,21 @@ export function NotificationsPanel() {
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not dismiss notification.");
       load(); // resync if the delete actually failed server-side
+    }
+  };
+
+  const respondToRequest = async (n: Notification, decision: "ACCEPT" | "REJECT") => {
+    if (!n.projectId || !n.relatedUserId) return;
+    setRespondingId(n.id);
+    setError("");
+    try {
+      await projectsApi.respondToRequest(n.projectId, n.relatedUserId, decision);
+      // Backend also clears the originating notification, but drop it locally too for instant feedback.
+      setNotifications((prev) => prev.filter((x) => x.id !== n.id));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : `Could not ${decision.toLowerCase()} request.`);
+    } finally {
+      setRespondingId(null);
     }
   };
 
@@ -146,6 +167,25 @@ export function NotificationsPanel() {
                   <p className="font-semibold text-slate-800 text-sm">{config.label}</p>
                   <p className="text-slate-500 text-xs mt-0.5 leading-relaxed">{n.message}</p>
                   <p className="text-blue-400 text-xs mt-1">{timeAgo(n.createdAt)}</p>
+
+                  {n.type === "MEMBERSHIP_REQUEST" && n.projectId && n.relatedUserId && (
+                    <div className="flex gap-2 mt-2.5" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => respondToRequest(n, "ACCEPT")}
+                        disabled={respondingId === n.id}
+                        className="px-3 py-1 bg-blue-600 text-white rounded-lg text-[11px] font-semibold hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        {respondingId === n.id ? "..." : "Accept"}
+                      </button>
+                      <button
+                        onClick={() => respondToRequest(n, "REJECT")}
+                        disabled={respondingId === n.id}
+                        className="px-3 py-1 bg-slate-200 text-slate-600 rounded-lg text-[11px] font-semibold hover:bg-slate-300 disabled:opacity-50"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <button

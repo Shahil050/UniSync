@@ -6,7 +6,7 @@ type PrismaTransactionClient = TransactionCallback extends (tx: infer T) => any 
 
 export async function notify(
   tx: PrismaTransactionClient | typeof prisma, // not Prisma.TransactionClient — that's the mismatch
-  params: { userId: string; type: NotificationType; message: string; projectId?: string }
+  params: { userId: string; type: NotificationType; message: string; projectId?: string; relatedUserId?: string }
 ) {
   await tx.notification.create({
     data: {
@@ -14,6 +14,7 @@ export async function notify(
       type: params.type,
       message: params.message,
       projectId: params.projectId ?? null,
+      relatedUserId: params.relatedUserId ?? null,
     },
   });
 }

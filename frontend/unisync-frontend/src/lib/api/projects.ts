@@ -22,6 +22,8 @@ export const projectsApi = {
   updateStatus: (id: string, status: string) =>
     api.patch(`/api/projects/${id}/status`, { status }),
 
+  start: (id: string) => api.post(`/api/projects/${id}/start`),
+
   remove: (id: string) => api.delete(`/api/projects/${id}`),
 
   // Membership

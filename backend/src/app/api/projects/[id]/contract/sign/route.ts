@@ -17,6 +17,16 @@ export const POST = auth(async function POST(req, { params }) {
   const userId = req.auth.user.id;
 
   const outcome = await prisma.$transaction(async (tx) => {
+    const project = await tx.project.findFirst({
+      where: { id: projectId, deletedAt: null },
+      select: { ownerId: true, status: true, title: true },
+    });
+    if (!project) return { status: 404 as const, message: "Project not found." };
+
+    if (project.ownerId !== userId && project.status === "OPEN") {
+      return { status: 409 as const, message: "The owner hasn't started this project yet." };
+    }
+
     const contract = await tx.contract.findUnique({
       where: { projectId },
       select: { id: true, status: true, dueDate: true },
@@ -49,10 +59,9 @@ export const POST = auth(async function POST(req, { params }) {
       data: { contractId: contract.id, userId },
     });
 
-    const project = await tx.project.findUnique({ where: { id: projectId }, select: { ownerId: true, title: true } });
     const signer = await tx.user.findUnique({ where: { id: userId }, select: { fullName: true } });
 
-    if (project && project.ownerId !== userId) {
+    if (project.ownerId !== userId) {
       await notify(tx, {
         userId: project.ownerId,
         type: "CONTRACT_SIGNED",

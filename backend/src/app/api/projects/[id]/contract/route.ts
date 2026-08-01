@@ -16,11 +16,30 @@ export const GET = auth(async function GET(req, { params }) {
 
   const userId = req.auth.user.id;
 
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, deletedAt: null },
+    select: { ownerId: true, status: true },
+  });
+  if (!project) {
+    return NextResponse.json({ success: false, message: "Project not found." }, { status: 404 });
+  }
+
+  const isOwner = project.ownerId === userId;
+
   const membership = await prisma.projectMember.findUnique({
     where: { projectId_userId: { projectId, userId } },
   });
   if (!membership || !["ACTIVE", "LEFT", "REMOVED"].includes(membership.status)) {
     return NextResponse.json({ success: false, message: "Access denied." }, { status: 403 });
+  }
+
+  // Members (not the owner) only get to see the agreement once the owner has
+  // officially started the project — before that it's still a draft.
+  if (!isOwner && project.status === "OPEN") {
+    return NextResponse.json(
+      { success: false, message: "The owner hasn't started this project yet — the agreement isn't visible until then." },
+      { status: 403 }
+    );
   }
 
   const contract = await prisma.contract.findUnique({

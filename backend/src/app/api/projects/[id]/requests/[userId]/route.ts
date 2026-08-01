@@ -101,6 +101,16 @@ export const PATCH = auth(async function PATCH(req, { params }) {
       },
     });
 
+    // Clear the owner's original join-request notification(s) for this user/project now that it's been actioned.
+    await tx.notification.deleteMany({
+      where: {
+        userId: ownerId,
+        projectId,
+        relatedUserId: targetUserId,
+        type: "MEMBERSHIP_REQUEST",
+      },
+    });
+
     return { status: 200 as const };
   });
 
