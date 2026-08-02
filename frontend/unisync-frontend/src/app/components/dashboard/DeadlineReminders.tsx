@@ -1,20 +1,30 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "motion/react";
 import { CalendarClock, AlertCircle } from "lucide-react";
+import { projectsApi } from "@/src/lib/api/projects";
+import { ApiError } from "@/src/lib/api-client";
 
 type Deadline = {
-  id: number;
+  id: string;
   projectName: string;
   dueDate: string;
   daysLeft: number;
 };
 
-const DEADLINES: Deadline[] = [
-  { id: 1, projectName: "Real-Time Chat System", dueDate: "Aug 15, 2026", daysLeft: 16 },
-  { id: 2, projectName: "Campus Event Aggregator", dueDate: "Aug 3, 2026", daysLeft: 4 },
-  { id: 3, projectName: "AI Crop Disease Detector", dueDate: "Jul 31, 2026", daysLeft: 1 },
-];
+function daysUntil(dueDate: string) {
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.ceil((due.getTime() - today.getTime()) / msPerDay);
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
 
 function urgencyStyle(daysLeft: number) {
   if (daysLeft <= 2) {
@@ -27,6 +37,36 @@ function urgencyStyle(daysLeft: number) {
 }
 
 export function DeadlineReminders() {
+  const [deadlines, setDeadlines] = useState<Deadline[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      const res = await projectsApi.list({ mine: true });
+      const upcoming: Deadline[] = res.projects
+        .filter((p: any) => p.status === "IN_PROGRESS" && p.contract?.dueDate)
+        .map((p: any) => ({
+          id: p.id,
+          projectName: p.title,
+          dueDate: p.contract.dueDate,
+          daysLeft: daysUntil(p.contract.dueDate),
+        }))
+        .filter((d: Deadline) => d.daysLeft >= 0)
+        .sort((a: Deadline, b: Deadline) => a.daysLeft - b.daysLeft)
+        .slice(0, 3);
+      setDeadlines(upcoming);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not load deadlines.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
   return (
     <div className="bg-white rounded-2xl border border-blue-100 shadow-sm p-5">
       <div className="flex items-center gap-2 mb-4">
@@ -34,11 +74,19 @@ export function DeadlineReminders() {
         <h2 className="font-bold text-slate-800 text-base">Upcoming Deadlines</h2>
       </div>
 
-      {DEADLINES.length === 0 ? (
+      {loading && <p className="text-slate-400 text-sm text-center py-6">Loading deadlines...</p>}
+
+      {!loading && error && (
+        <p className="text-red-500 text-sm text-center py-6">{error}</p>
+      )}
+
+      {!loading && !error && deadlines.length === 0 && (
         <p className="text-slate-400 text-sm text-center py-6">No upcoming deadlines 🎉</p>
-      ) : (
+      )}
+
+      {!loading && !error && deadlines.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {DEADLINES.map((d, i) => {
+          {deadlines.map((d, i) => {
             const s = urgencyStyle(d.daysLeft);
             return (
               <motion.div
@@ -52,7 +100,7 @@ export function DeadlineReminders() {
                   <AlertCircle size={14} className={`absolute top-2 right-2 ${s.text}`} />
                 )}
                 <p className="font-semibold text-slate-800 text-xs truncate pr-4">{d.projectName}</p>
-                <p className="text-slate-400 text-[11px] mt-0.5">{d.dueDate}</p>
+                <p className="text-slate-400 text-[11px] mt-0.5">{formatDate(d.dueDate)}</p>
                 <p className={`font-bold text-sm mt-2 ${s.text}`}>
                   {d.daysLeft === 0 ? "Due today" : `${d.daysLeft} day${d.daysLeft === 1 ? "" : "s"} left`}
                 </p>
