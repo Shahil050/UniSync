@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { PeerCard, type Peer } from "../shared/PeerCard";
+import { PeerProfileModal } from "../shared/PeerProfileModal";
 import { Filter, Search } from "lucide-react";
 import { usersApi } from "@/src/lib/api/users";
 import { ApiError } from "@/src/lib/api-client";
@@ -39,9 +40,14 @@ export function DiscoverPeers() {
   const [search, setSearch] = useState("");
   const [faculty, setFaculty] = useState("All");
   const [error, setError] = useState("");
+  const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
 
   const handleMessage = (id: string) => {
     router.push(`/messages?dm=${id}`);
+  };
+
+  const handleViewProfile = (id: string) => {
+    setViewingProfileId(id);
   };
 
   // Load AI Recommendations
@@ -85,11 +91,11 @@ export function DiscoverPeers() {
 
       // Remove students already shown in recommendations
       const recommendedIds = new Set(
-        recommended.map((peer) => peer.id)
+        recommended.map((peer: Peer) => peer.id)
       );
 
       const filteredStudents = allStudents.filter(
-        (peer) => !recommendedIds.has(peer.id)
+        (peer: Peer) => !recommendedIds.has(peer.id)
       );
 
       setDirectory(filteredStudents);
@@ -129,6 +135,7 @@ export function DiscoverPeers() {
                   key={peer.id}
                   peer={peer}
                   onMessage={handleMessage}
+                  onViewProfile={handleViewProfile}
                 />
               ))}
             </div>
@@ -199,6 +206,7 @@ export function DiscoverPeers() {
                   key={peer.id}
                   peer={peer}
                   onMessage={handleMessage}
+                  onViewProfile={handleViewProfile}
                 />
               ))}
             </div>
@@ -211,6 +219,17 @@ export function DiscoverPeers() {
           </>
         )}
       </section>
+
+      {viewingProfileId && (
+        <PeerProfileModal
+          userId={viewingProfileId}
+          onClose={() => setViewingProfileId(null)}
+          onMessage={(id) => {
+            setViewingProfileId(null);
+            handleMessage(id);
+          }}
+        />
+      )}
     </div>
   );
 }
