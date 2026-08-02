@@ -45,6 +45,8 @@ services:
       - frontend-network
       - backend-network
 
+    volumes:
+      - backend_data:/app/storage/papers
 
   ai-service:
     build:
@@ -82,6 +84,7 @@ services:
 volumes:
   huggingface_cache:
   postgres_data:
+  backend_data:
 
 
 networks:
