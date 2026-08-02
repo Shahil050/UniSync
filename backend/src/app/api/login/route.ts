@@ -68,6 +68,7 @@ export async function POST(req: NextRequest) {
       email: user.email,
       name: user.fullName,
       role: user.role,
+      profileImage: user.profileImage,
     },
   });
 

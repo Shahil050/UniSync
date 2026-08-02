@@ -28,10 +28,19 @@ import { DeadlineReminders } from "../components/dashboard/DeadlineReminders";
 import { NotificationsPanel } from "../components/dashboard/NotificationsPanel";
 import { PaperUploadPanel } from "../components/dashboard/PaperUploadPanel";
 import { SearchBar } from "../components/shared/SearchBar";
+import { UserAvatar } from "../components/shared/UserAvatar";
 import { useUser } from "../UserContext";
 import { usersApi } from "@/src/lib/api/users";
 import { projectsApi } from "@/src/lib/api/projects";
+import { notificationsApi } from "@/src/lib/api/notifications";
 import { ApiError } from "@/src/lib/api-client";
+
+function greeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning,";
+  if (hour < 18) return "Good afternoon,";
+  return "Good evening,";
+}
 
 type Tab = "overview" | "profile" | "discover" | "ideas" | "agreements" | "messages" | "activity" | "notifications" | "upload-papers";
 
@@ -57,18 +66,34 @@ export function DashboardPage() {
   const initialTab = (searchParams.get("tab") as Tab) || "overview";
   const [activeTab, setActiveTab] = useState<Tab>(isAdmin ? "upload-papers" : initialTab);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [overviewStats, setOverviewStats] = useState({ projects: 0, badges: 0, penalties: 0 });
+  const [overviewStats, setOverviewStats] = useState({
+    projects: 0,
+    badges: 0,
+    penalties: 0,
+    pendingAgreements: 0,
+    unreadNotifications: 0,
+  });
 
   useEffect(() => {
     if (isAdmin) return;
     let cancelled = false;
-    Promise.all([usersApi.get(user.id), projectsApi.list({ userId: user.id })])
-      .then(([profileRes, projectsRes]) => {
+    Promise.all([
+      usersApi.get(user.id),
+      projectsApi.list({ userId: user.id }),
+      projectsApi.list({ mine: true }),
+      notificationsApi.list(),
+    ])
+      .then(([profileRes, projectsRes, mineRes, notificationsRes]) => {
         if (cancelled) return;
+        const pendingAgreements = mineRes.projects.filter(
+          (p: any) => p.contract?.status === "DRAFT"
+        ).length;
         setOverviewStats({
           projects: projectsRes.projects.length,
           badges: profileRes.user.badges.length,
           penalties: profileRes.user.penaltyTags?.length ?? 0,
+          pendingAgreements,
+          unreadNotifications: notificationsRes.unreadCount ?? 0,
         });
       })
       .catch((err) => {
@@ -113,11 +138,7 @@ export function DashboardPage() {
       onClick={() => setProfileOpen(!profileOpen)}
       className="flex items-center gap-2 rounded-xl p-1 hover:bg-blue-50 transition"
     >
-      <img
-        src={user.avatar}
-        alt={user.name}
-        className="w-10 h-10 rounded-full border-2 border-blue-200 object-cover"
-      />
+      <UserAvatar name={user.name} src={user.avatar} size="md" />
       <ChevronDown size={16} className="text-slate-500" />
     </button>
 
@@ -131,11 +152,7 @@ export function DashboardPage() {
         >
 
           <div className="p-5 text-center border-b border-slate-100">
-            <img
-              src={user.avatar}
-              alt={user.name}
-              className="w-20 h-20 rounded-full mx-auto border-4 border-blue-100 object-cover"
-            />
+            <UserAvatar name={user.name} src={user.avatar} size="xl" className="mx-auto" />
 
             <h3 className="font-bold text-slate-800 mt-3">
               {user.name}
@@ -220,9 +237,13 @@ export function DashboardPage() {
                 <div className="absolute right-0 top-0 bottom-0 w-32 opacity-10">
                   <Zap size={120} className="text-white ml-4 mt-4" />
                 </div>
-                <p className="text-blue-200 text-sm mb-1">Good morning,</p>
+                <p className="text-blue-200 text-sm mb-1">{greeting()}</p>
                 <h1 className="text-2xl font-black mb-2">{user.name} </h1>
-                <p className="text-blue-200 text-sm">You have 2 pending agreements and 3 new notifications today.</p>
+                <p className="text-blue-200 text-sm">
+                  {overviewStats.pendingAgreements === 0 && overviewStats.unreadNotifications === 0
+                    ? "You're all caught up — no pending agreements or new notifications."
+                    : `You have ${overviewStats.pendingAgreements} pending agreement${overviewStats.pendingAgreements === 1 ? "" : "s"} and ${overviewStats.unreadNotifications} new notification${overviewStats.unreadNotifications === 1 ? "" : "s"}.`}
+                </p>
                 <div className="flex gap-3 mt-4">
                   <button onClick={() => setActiveTab("discover")} className="px-4 py-2 bg-white/20 rounded-xl text-sm font-medium hover:bg-white/30 transition-colors">
                     Find Peers

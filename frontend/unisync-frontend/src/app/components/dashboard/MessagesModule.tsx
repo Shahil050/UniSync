@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Send, Paperclip, Image as ImageIcon, Smile, Users, Github, Trello, FileText, ExternalLink, MoreVertical, File, X, Edit3,
-  CheckCircle, User as UserIcon, Globe, UserPlus, Trash2, Crown, BellOff, Bell, Trash, LogOut, Info, ShieldAlert, FolderOpen,
+  CheckCircle, Globe, UserPlus, Trash2, Crown, BellOff, Bell, Trash, LogOut, Info, ShieldAlert, FolderOpen,
   Plus, Download, Camera,
   User, AlertCircle, Award, AlertTriangle, CheckCircle2,
 } from "lucide-react";
@@ -15,6 +15,7 @@ import { usersApi } from "@/src/lib/api/users";
 import { badgesApi } from "@/src/lib/api/badges";
 import { ApiError } from "@/src/lib/api-client";
 import { papersApi } from "@/src/lib/api/papers";
+import { UserAvatar } from "../shared/UserAvatar";
 
 // --- TYPES ---
 type Conversation = {
@@ -67,53 +68,6 @@ type SuggestedPaper = { id: string; title: string; authors: string | null };
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-
-// --- INITIALS AVATAR COMPONENT ---
-function UserAvatar({
-  name,
-  src,
-  size = "md",
-  onClick
-}: {
-  name: string;
-  src?: string | null;
-  size?: "sm" | "md" | "lg";
-  onClick?: () => void
-}) {
-  const sizeClasses = size === "sm" ? "w-7 h-7 text-[10px]" : size === "lg" ? "w-14 h-14 text-base" : "w-10 h-10 text-xs";
-
-  if (src) {
-    return (
-      <img
-        src={src}
-        alt={name}
-        onClick={onClick}
-        className={`${sizeClasses} rounded-full object-cover flex-shrink-0 border border-slate-200 ${
-          onClick ? "cursor-pointer hover:opacity-80 transition-opacity" : ""
-        }`}
-      />
-    );
-  }
-
-  const initials = name
-    .trim()
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-  return (
-    <div
-      onClick={onClick}
-      className={`${sizeClasses} rounded-full bg-slate-800 text-white font-bold flex items-center justify-center flex-shrink-0 shadow-sm ${
-        onClick ? "cursor-pointer hover:bg-blue-600 transition-colors" : ""
-      }`}
-    >
-      {initials || <UserIcon size={14} />}
-    </div>
-  );
 }
 
 // --- MAIN MESSAGES MODULE ---

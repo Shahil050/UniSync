@@ -144,9 +144,24 @@ export const GET = auth(async function GET(req) {
       members: {
         select: { userId: true, role: true, status: true, user: { select: { fullName: true } } },
       },
+      contract: {
+        select: { status: true, dueDate: true },
+      },
     },
   });
 
-  return NextResponse.json({ success: true, projects });
-});
+  // Mirror the visibility rule from GET /api/projects/:id/contract: members
+  // (not the owner) can't see agreement details until the owner has started
+  // the project. Strip contract data from the response for anyone that
+  // rule would otherwise block.
+  const currentUserId = req.auth.user.id;
+  const visibleProjects = projects.map((project) => {
+    const isOwner = project.ownerId === currentUserId;
+    if (!isOwner && project.status === "OPEN") {
+      return { ...project, contract: null };
+    }
+    return project;
+  });
 
+  return NextResponse.json({ success: true, projects: visibleProjects });
+});
