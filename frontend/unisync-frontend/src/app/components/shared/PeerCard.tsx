@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "motion/react";
-import { Github, Linkedin, Sparkles, MessageCircle } from "lucide-react";
+import { Github, Linkedin, Sparkles, MessageCircle, User } from "lucide-react";
 
 export type Peer = {
   id: string;
@@ -16,10 +16,11 @@ export type Peer = {
 type PeerCardProps = {
   peer: Peer;
   onMessage: (id: string) => void;
+  onViewProfile?: (id: string) => void;
   compact?: boolean;
 };
 
-export function PeerCard({ peer, onMessage, compact }: PeerCardProps) {
+export function PeerCard({ peer, onMessage, onViewProfile, compact }: PeerCardProps) {
   const initials = peer.name.trim().split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
 
   return (
@@ -78,13 +79,24 @@ export function PeerCard({ peer, onMessage, compact }: PeerCardProps) {
           )}
         </div>
 
-        <button
-          onClick={() => onMessage(peer.id)}
-          className="w-full flex items-center justify-center gap-2 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all"
-        >
-          <MessageCircle size={15} />
-          Message
-        </button>
+        <div className="flex items-center gap-2">
+          {onViewProfile && (
+            <button
+              onClick={() => onViewProfile(peer.id)}
+              className="flex-1 flex items-center justify-center gap-2 py-2 border border-blue-200 text-blue-600 rounded-xl text-sm font-semibold hover:bg-blue-50 transition-all"
+            >
+              <User size={15} />
+              View Profile
+            </button>
+          )}
+          <button
+            onClick={() => onMessage(peer.id)}
+            className="flex-1 flex items-center justify-center gap-2 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all"
+          >
+            <MessageCircle size={15} />
+            Message
+          </button>
+        </div>
       </div>
     </motion.div>
   );
