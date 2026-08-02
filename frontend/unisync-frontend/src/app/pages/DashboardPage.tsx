@@ -23,11 +23,12 @@ import { DiscoverPeers } from "../components/dashboard/DiscoverPeers";
 import { IdeasFeed } from "../components/dashboard/IdeasFeed";
 import { AgreementsModule } from "../components/dashboard/AgreementsModule";
 import { MessagesModule } from "../components/dashboard/MessagesModule";
-// import { ActivityLogs } from "../components/dashboard/ActivityLogs";
+import { ActivityLogs } from "../components/dashboard/ActivityLogs";
 import { DeadlineReminders } from "../components/dashboard/DeadlineReminders";
 import { NotificationsPanel } from "../components/dashboard/NotificationsPanel";
 import { PaperUploadPanel } from "../components/dashboard/PaperUploadPanel";
 import { SearchBar } from "../components/shared/SearchBar";
+import { UserAvatar } from "../components/shared/UserAvatar";
 import { useUser } from "../UserContext";
 import { usersApi } from "@/src/lib/api/users";
 import { projectsApi } from "@/src/lib/api/projects";
@@ -41,7 +42,7 @@ function greeting() {
   return "Good evening,";
 }
 
-type Tab = "overview" | "profile" | "discover" | "ideas" | "agreements" | "messages" | "notifications" | "upload-papers";
+type Tab = "overview" | "profile" | "discover" | "ideas" | "agreements" | "messages" | "activity" | "notifications" | "upload-papers";
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "overview", label: "Overview", icon: <LayoutDashboard size={16} /> },
@@ -49,7 +50,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "ideas", label: "Ideas", icon: <Lightbulb size={16} /> },
   { id: "agreements", label: "Agreements", icon: <FileSignature size={16} /> },
   { id: "messages", label: "Messages", icon: <MessageCircle size={16} /> },
-  // { id: "activity", label: "Activity", icon: <BarChart2 size={16} /> },
+  { id: "activity", label: "Activity", icon: <BarChart2 size={16} /> },
   { id: "notifications", label: "Notification", icon: <Bell size={16} /> },
 ];
 
@@ -137,11 +138,7 @@ export function DashboardPage() {
       onClick={() => setProfileOpen(!profileOpen)}
       className="flex items-center gap-2 rounded-xl p-1 hover:bg-blue-50 transition"
     >
-      <img
-        src={user.avatar}
-        alt={user.name}
-        className="w-10 h-10 rounded-full border-2 border-blue-200 object-cover"
-      />
+      <UserAvatar name={user.name} src={user.avatar} size="md" />
       <ChevronDown size={16} className="text-slate-500" />
     </button>
 
@@ -155,11 +152,7 @@ export function DashboardPage() {
         >
 
           <div className="p-5 text-center border-b border-slate-100">
-            <img
-              src={user.avatar}
-              alt={user.name}
-              className="w-20 h-20 rounded-full mx-auto border-4 border-blue-100 object-cover"
-            />
+            <UserAvatar name={user.name} src={user.avatar} size="xl" className="mx-auto" />
 
             <h3 className="font-bold text-slate-800 mt-3">
               {user.name}
@@ -310,7 +303,7 @@ export function DashboardPage() {
         {!isAdmin && activeTab === "ideas" && <IdeasFeed />}
         {!isAdmin && activeTab === "agreements" && <AgreementsModule />}
         {!isAdmin && activeTab === "messages" && <MessagesModule user={user} />}
-        {/* {!isAdmin && activeTab === "activity" && <ActivityLogs />} */}
+        {!isAdmin && activeTab === "activity" && <ActivityLogs />}
         {!isAdmin && activeTab === "notifications" && <NotificationsPanel />}
 
       </div>

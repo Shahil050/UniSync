@@ -5,12 +5,14 @@ import type { AppUser } from "../../UserContext";
 import { usersApi } from "@/src/lib/api/users";
 import { projectsApi } from "@/src/lib/api/projects";
 import { ApiError } from "@/src/lib/api-client";
+import { UserAvatar } from "../shared/UserAvatar";
 
 type ProfileData = {
   bio: string | null;
   department: string | null;
   githubUrl: string | null;
   linkedinUrl: string | null;
+  profileImage: string | null;
   institution: { name: string } | null;
   badges: { projectId: string | null; awardedAt: string; badge: { name: string } }[];
 };
@@ -120,10 +122,11 @@ export function ProfileSection({ user }: { user: AppUser }) {
         <div className="px-6 pb-6 -mt-12">
           <div className="flex items-end justify-between mb-4">
             <div className="relative">
-              <img
-                src={user.avatar}
-                alt={user.name}
-                className="w-20 h-20 rounded-2xl border-4 border-white object-cover shadow-lg"
+              <UserAvatar
+                name={user.name}
+                src={profile.profileImage}
+                size="xl"
+                className="border-4 border-white shadow-lg"
               />
               <button
                 disabled

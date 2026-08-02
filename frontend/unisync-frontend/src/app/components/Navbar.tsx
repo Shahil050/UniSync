@@ -15,6 +15,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useUser } from "../UserContext";
+import { UserAvatar } from "./shared/UserAvatar";
 
 const navLinks = [
   { href: "/", label: "Home", icon: null },
@@ -74,11 +75,7 @@ const isDashboard = pathname === "/dashboard";
         onClick={() => setProfileOpen(!profileOpen)}
         className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-all"
       >
-        <img
-          src={user.avatar}
-          alt={user.name}
-          className="w-7 h-7 rounded-full object-cover border-2 border-blue-200"
-        />
+        <UserAvatar name={user.name} src={user.avatar} size="sm" />
         <span className="text-sm font-medium text-slate-700">
           {user.name.split(" ")[0]}
         </span>
